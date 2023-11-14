@@ -1,0 +1,37 @@
+{
+  "name": "library",
+  "version": "1.0.0",
+  "description": "This is a small example of CRUD to CQRS refactoring that will be deployed in AWS Lambda environment.",
+  "main": "dist/app/server.js",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/express": "~4.17.21",
+    "@types/express-promise-router": "~3.0.0",
+    "@types/jest": "~29.5.7",
+    "@types/node": "~20.8.10",
+    "@types/supertest": "~2.0.15",
+    "@typescript-eslint/eslint-plugin": "~6.10.0",
+    "@typescript-eslint/parser": "~6.10.0",
+    "concurrently": "~8.2.2",
+    "eslint": "~8.53.0",
+    "jest": "~29.7.0",
+    "nodemon": "~3.0.1",
+    "supertest": "~6.3.3",
+    "ts-jest": "~29.1.1",
+    "ts-node": "~10.9.1",
+    "typescript": "~5.2.2"
+  },
+  "dependencies": {
+    "dotenv": "~16.3.1",
+    "express": "~4.18.2",
+    "express-promise-router": "~4.1.1"
+  },
+  "scripts": {
+    "lint": "npx eslint .",
+    "build": "npx tsc",
+    "test": "jest --runInBand",
+    "development": "npm run lint && npm run build && npm run test",
+    "start": "node dist/app/server.js",
+    "server": "concurrently 'npx tsc --watch' 'nodemon -q dist/app/server.js'"
+  }
+}

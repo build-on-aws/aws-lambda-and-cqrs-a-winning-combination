@@ -1,0 +1,4 @@
+awscli
+aws-mfa
+boto3
+botocore

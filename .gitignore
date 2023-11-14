@@ -1,0 +1,47 @@
+# macOS specifics.
+.DS_Store
+
+# Python virtualenv directory.
+.env/
+
+# "Work in Progress" directory.
+.wip/
+
+# Node.js dependencies.
+node_modules/
+
+# SQLite databases.
+*.db
+
+# IDEs.
+.vscode/
+.idea/
+*.iml
+.ipynb_checkpoints/
+
+# Archives.
+*.zip
+*.tar.gz
+
+# Private scripts.
+*.private.sh
+
+# Temporary artifacts:
+.tmp/
+
+# Ignoring compiled assets:
+dist/
+*.js
+*.d.ts
+
+# However, Jest and ESLint configurations should be commited:
+!jest.config.js
+!.eslintrc.js
+
+# CDK assets:
+cdk.out/
+.cdk.staging/
+cdk.context.json
+
+# Jest snapshots:
+test/__snapshots__/
