@@ -2,8 +2,8 @@ import { BaseEntity } from './BaseEntity';
 import { Book } from './Book';
 
 export class User extends BaseEntity {
-  name: string;
   email: string;
+  name: string;
   status: UserStatus = UserStatus.NOT_VERIFIED;
   statusComment: string;
   borrowedBooks? = [Book];

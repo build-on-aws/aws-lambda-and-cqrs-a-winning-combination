@@ -10,7 +10,7 @@
 # Node.js dependencies.
 node_modules/
 
-# SQLite databases.
+# Databases.
 *.db
 
 # IDEs.
