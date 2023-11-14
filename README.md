@@ -44,9 +44,12 @@ Then each directory contains an identical set of commands:
       - `npm run build` to compile *TypeScript*.
       - `npm run test` to run *Jest* tests.
   - Inside individual approach directory:
-    - `sam validate`
-    - `sam build`
-    - `sam deploy`
+    - In places where we have shared *AWS Lambda* layers: `npm install`
+      - And the same set of commands as above in each individual layer directory.
+    - Then for the *infrastructure as code*:
+      - `sam validate`
+      - `sam build`
+      - `sam deploy --guided`
 
 ## Screenplay
 

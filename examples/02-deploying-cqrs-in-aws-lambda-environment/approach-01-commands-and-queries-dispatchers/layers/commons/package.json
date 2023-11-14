@@ -1,0 +1,17 @@
+{
+  "name": "layer-commons",
+  "description": "Example AWS Lambda layer with commons.",
+  "main": "index.ts",
+  "version": "1.0.0",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "~20.8.10",
+    "typescript": "~5.2.2"
+  },
+  "scripts": {
+    "lint": "npx eslint .",
+    "build": "node_modules/typescript/bin/tsc",
+    "test": "jest --runInBand",
+    "development": "npm run lint && npm run build && npm run test"
+  }
+}

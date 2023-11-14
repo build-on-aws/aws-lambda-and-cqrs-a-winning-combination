@@ -7,5 +7,4 @@ const config: Config.InitialOptions = {
   ],
   preset: "ts-jest"
 };
-
 export default config;

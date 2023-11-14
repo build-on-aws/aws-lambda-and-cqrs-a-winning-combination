@@ -1,0 +1,17 @@
+{
+  "name": "library",
+  "version": "1.0.0",
+  "description": "This is a small example of CRUD to CQRS refactoring that will be deployed in AWS Lambda environment.",
+  "main": "app/handler.js",
+  "license": "MIT",
+  "devDependencies": {},
+  "dependencies": {
+    "esbuild": "~0.14.14"
+  },
+  "scripts": {
+    "lint": "npx eslint .",
+    "build": "npx tsc",
+    "test": "jest --runInBand",
+    "development": "npm run lint && npm run build && npm run test"
+  }
+}
