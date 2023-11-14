@@ -156,7 +156,23 @@ There are a few important reasons collected below:
 
 After introducing a split and separated domain that is domain-oriented and has commands and queries, you will need to evaluate how to deploy such application in the *Serverless* architecture environment using *AWS Lambda* as a main service. That's why you can see various different deployment approaches inside *[examples/02-deploying-cqrs-in-aws-lambda-environment](./examples/02-deploying-cqrs-in-aws-lambda-environment)*.
 
-There is a very important concept to emphasise, that saved you from rewriting significant parts over and over which is [Ports and Adapters (aka *Hexagonal Architecture*)](https://en.wikipedia.org/wiki/Hexagonal_architecture_(software)) pattern.
+There are a few very important concepts to emphasise in this phase, so let's iterate one after another.
+
+#### Ports and Adapters
+
+We are talking about [Ports and Adapters (aka *Hexagonal Architecture*)](https://en.wikipedia.org/wiki/Hexagonal_architecture_(software)) pattern, which saved you from rewriting significant parts over and over.
+
+#### Extracting API
+
+Previous step and separation from externalities like *API* definition or input validation (just for making sure that commands and queries are *processable*), allows us for a clean cut and extracting *API definition* to the external service - like *Amazon API Gateway*.
+
+#### Flexibility in Splitting
+
+Another benefit coming from the *Hexagonal Architecture* is ability to cleanly extract different commands/queries independently based on the project needs (e.g., due to scalability or performance reasons).
+
+#### Ability to Replace Service Representation
+
+Last, but not least - extracting externalities allowed us to abstract away interaction-specific details. This way we have introduced *Amazon API Gateway*, however - nothing stops us from introducing (in parts or in a single move) other kinds of triggers e.g., we can trigger certain *AWS Lambda* via message coming from *Amazon SQS* queue or expose our queries via *GraphQL* *API* via *AWS AppSync*.
 
 ## Resources
 

@@ -12,7 +12,7 @@ node_modules/
 
 # Structurizr.
 .structurizr/
-docs/c4/workspace.json
+docs/c4/**/workspace.json
 
 # Databases.
 data/dynamodb/

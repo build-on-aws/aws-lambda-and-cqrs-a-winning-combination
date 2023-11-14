@@ -17,5 +17,8 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - "../docs/c4:/usr/local/structurizr"
+      - "../docs/c4/01-from-crud-to-cqrs/step-00-crud:/usr/local/structurizr"
+      # - "../docs/c4/01-from-crud-to-cqrs/step-05-final-stage:/usr/local/structurizr"
+      # - "../docs/c4/02-deploying-cqrs-in-aws-lambda-environment/approach-00-monolithic-dispatcher:/usr/local/structurizr"
+      # - "../docs/c4/02-deploying-cqrs-in-aws-lambda-environment/approach-04-full-separation:/usr/local/structurizr"
     working_dir: /usr/local/structurizr
