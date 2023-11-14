@@ -17,6 +17,9 @@ docs/c4/workspace.json
 # Databases.
 data/dynamodb/
 
+# AWS SAM.
+.aws-sam/
+
 # IDEs.
 .vscode/
 .idea/

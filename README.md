@@ -14,8 +14,7 @@ Here you can find a list of the recommended prerequisites for this repository.
   - [Finch](https://runfinch.com) or any other tool for local container development compatible with *Docker* APIs.
   - Most recent *AWS CLI*.
   - Most recent *AWS SAM CLI*.
-  - Python 3.10 or higher.
-  - Node.js v21.x or higher.
+  - Node.js in version `18.18.x` or higher.
 - Configured profile in the installed *AWS CLI* with credentials for your *AWS IAM* user account of choice.
 
 If you would like to start all the dependent services, run the following commands:
@@ -26,6 +25,28 @@ If you would like to start all the dependent services, run the following command
 $ cd examples
 $ finch compose up -d             # ... or `docker compose up -d`
 ```
+
+Then each directory contains an identical set of commands:
+
+- For [examples/01-from-crud-to-cqrs](./examples/01-from-crud-to-cqrs) and subsequent steps:
+  - `npm install` to install all the dependencies.
+  - `npm run development` that is bundling the following commands:
+    - `npm run lint` to lint the *TypeScript* code.
+    - `npm run build` to compile *TypeScript*.
+    - `npm run test` to run *Jest* tests.
+  - `npm run start` to start a compiled version of the server.
+  - `npm run server` to recompile and host the resulting server.
+- For [examples/02-deploying-cqrs-in-aws-lambda-environment](./examples/02-deploying-cqrs-in-aws-lambda-environment) and every single collected approach:
+  - Inside `library` directory inside each approach:
+    - `npm install` to install all the dependencies.
+    - `npm run development` that is bundling the following commands:
+      - `npm run lint` to lint the *TypeScript* code.
+      - `npm run build` to compile *TypeScript*.
+      - `npm run test` to run *Jest* tests.
+  - Inside individual approach directory:
+    - `sam validate`
+    - `sam build`
+    - `sam deploy`
 
 ## Screenplay
 
@@ -95,17 +116,25 @@ As an example you will need to implement the following operations:
   - `GetMissingBooks`
 - Commands:
   - `AddNewBook`:
-    - Checking if author exists.
+    - Business validation of the provided book entity.
+      - Input validation (if all the details allow for processing command) is done earlier.
+    - Checking, if author exists.
       - If not, adding author.
     - Adding book with that author, no borrower, and certain status.
   - `BorrowBook`:
-    - Checking if book is available.
+    - Business validation of the provided book entity.
+      - Input validation (if all the details allow for processing command) is done earlier.
+    - Checking if a given book is available.
       - If not, returning error.
     - Updating borrower.
     - Updating book status.
   - `ReportMissingBook`:
-    - Update book status.
-    - Mark user that borrowed as wrongly behaving.
+    - Business validation of the provided book entity.
+      - Input validation (if all the details allow for processing command) is done earlier.
+    - Checking, if a given book is available.
+      - If not, returning error.
+    - Update the given book status.
+    - Block the user that borrowed this position, and add annotation in the status about the ID of the  missing book.
     - Remove current borrower from the book.
 
 #### Why do you want a refactor from CRUD to CQRS?
@@ -114,11 +143,11 @@ There are a few important reasons collected below:
 
 - Maintainability:
   - Readability.
-  - Lower cognitive load.
-  - Better understanding due to closer domain representation.
+    - Better understanding due to closer domain representation.
+  - Lower complexity = Lower cognitive load.
 - Usability:
   - Developer Experience.
-  - CRUD vs. Task-based UI.
+  - Promoting Task-based UI.
 - Flexibility:
   - Infrastructure-wise.
     - Unit of Deployments.
