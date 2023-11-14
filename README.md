@@ -49,19 +49,19 @@ At *AWS re:Invent 2023*, each such session has a timebox of 1 hour, so here is a
 
 Our *use case* for this exercise is a *back-end* of the web application supporting *libraries*.
 
-Example is written in *TypeScript* and starts from a very simplistic *CRUD (Create, Read, Update, Delete)* implementation (starting here: *[step-00-crud](./examples/01-from-crud-to-cqrs/step-00-crud)* directory).
+Example is written in *TypeScript* and starts from a very simplistic *CRUD (Create, Read, Update, Delete)* implementation. First step is available in *[examples/01-from-crud-to-cqrs/step-00-crud](./examples/01-from-crud-to-cqrs/step-00-crud)* directory, and each directory is a further step in the sequence of refining and refactoring even more towards domain-oriented code.
 
-On that stage, the internals of the application looks as follows:
+Starting from the initial stage, the internals of the application looks as follows:
 
 ![Starting point for the discussion: CRUD-like implementation of the system](./docs/step-00-crud.png)
 
-We have 3 entities:
+Application have 3 entities:
 
 - `Author` with `name` field.
 - `User` with fields: `email`, `name`, `status`, and `statusComment` (as name suggests - relevant to the `status` field).
 - `Book` with fields `title`, `isbn` (which is a short for *International Standard Book Number*), `author` (pointing to `Author` entity), `borrower` (pointing to `User` entity), and `status`.
 
-If we have a closer look on the *API*, it is very CRUD-oriented:
+If you have a closer look on the *API*, it is very CRUD-oriented:
 
 ```text
 POST    /author        creates new author
@@ -85,45 +85,49 @@ DELETE  /user/:id      deletes user by id
 
 ### Phase 1: Refactoring from CRUD to CQRS
 
-TODO: Better description.
+In this phase, you want for refactor from a *CRUD-like* architecture and representation to something that will represent domain-specific actions.
 
-- Operations:
-  - Queries:
-    - `GetBooksByAuthor`
-    - `GetBorrowedBooksByUser`
-    - `GetMissingBooks`
-  - Commands:
-    - `AddNewBook`.
-      - Checking if author exists.
-        - If not, adding author.
-      - Adding book with that author, no borrower, and certain status.
-    - `BorrowBook`
-      - Checking if book is available.
-        - If not, returning error.
-      - Updating borrower.
-      - Updating book status.
-    - `ReportMissingBook`
-      - Update book status.
-      - Mark user that borrowed as wrongly behaving.
-      - Remove current borrower from the book.
+As an example you will need to implement the following operations:
 
-#### Why do we refactor to CQRS from CRUD?
+- Queries:
+  - `GetBooksByAuthor`
+  - `GetBorrowedBooksByUser`
+  - `GetMissingBooks`
+- Commands:
+  - `AddNewBook`:
+    - Checking if author exists.
+      - If not, adding author.
+    - Adding book with that author, no borrower, and certain status.
+  - `BorrowBook`:
+    - Checking if book is available.
+      - If not, returning error.
+    - Updating borrower.
+    - Updating book status.
+  - `ReportMissingBook`:
+    - Update book status.
+    - Mark user that borrowed as wrongly behaving.
+    - Remove current borrower from the book.
 
-TODO: Better description.
+#### Why do you want a refactor from CRUD to CQRS?
 
-- Maintainability.
+There are a few important reasons collected below:
+
+- Maintainability:
   - Readability.
-  - Being closer to the domain.
-- Usability.
+  - Lower cognitive load.
+  - Better understanding due to closer domain representation.
+- Usability:
   - Developer Experience.
-- Lower cognitive load.
-- CRUD vs. Task-based UI.
+  - CRUD vs. Task-based UI.
+- Flexibility:
+  - Infrastructure-wise.
+    - Unit of Deployments.
 
 ### Phase 2: Deploying CQRS in AWS Lambda Environment
 
-TODO: Better description.
-TODO: Dispatcher concept.
-TODO: Ports and Adapters to the rescue from rewriting, due to infrastructure specific changes.
+After introducing a split and separated domain that is domain-oriented and has commands and queries, you will need to evaluate how to deploy such application in the *Serverless* architecture environment using *AWS Lambda* as a main service. That's why you can see various different deployment approaches inside *[examples/02-deploying-cqrs-in-aws-lambda-environment](./examples/02-deploying-cqrs-in-aws-lambda-environment)*.
+
+There is a very important concept to emphasise, that saved you from rewriting significant parts over and over which is [Ports and Adapters (aka *Hexagonal Architecture*)](https://en.wikipedia.org/wiki/Hexagonal_architecture_(software)) pattern.
 
 ## Resources
 
