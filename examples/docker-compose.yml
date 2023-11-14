@@ -1,5 +1,6 @@
 version: "3.8"
 services:
+
   dynamodb-local:
     command: "-jar DynamoDBLocal.jar -sharedDb -dbPath ./data"
     image: "amazon/dynamodb-local:latest"
@@ -7,5 +8,14 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - "./data/dynamodb.db:/home/dynamodblocal/data"
+      - "../data/dynamodb:/home/dynamodblocal/data"
     working_dir: /home/dynamodblocal
+
+  structurizr-lite:
+    image: "structurizr/lite:latest"
+    container_name: structurizr-lite
+    ports:
+      - "8080:8080"
+    volumes:
+      - "../docs/c4:/usr/local/structurizr"
+    working_dir: /usr/local/structurizr

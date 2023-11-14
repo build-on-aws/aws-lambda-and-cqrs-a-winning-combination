@@ -10,8 +10,12 @@
 # Node.js dependencies.
 node_modules/
 
+# Structurizr.
+.structurizr/
+docs/c4/workspace.json
+
 # Databases.
-*.db
+data/dynamodb/
 
 # IDEs.
 .vscode/
