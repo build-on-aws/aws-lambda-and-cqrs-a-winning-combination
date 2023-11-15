@@ -111,12 +111,12 @@ DELETE  /user/:id      deletes user by id
 
 In this phase, you want for refactor from a *CRUD-like* architecture and representation to something that will represent domain-specific actions.
 
-As an example you will need to implement the following operations:
+As an example, you will need to implement just a subset of all available operations - which are:
 
 - Queries:
-  - `GetBooksByAuthor`
-  - `GetBorrowedBooksByUser`
-  - `GetMissingBooks`
+  - `GetBooksByAuthor` by given author identifier.
+  - `GetBorrowedBooksByUser` by given user identifier.
+  - `GetMissingBooks` without any additional criteria.
 - Commands:
   - `AddNewBook`:
     - Business validation of the provided book entity.
