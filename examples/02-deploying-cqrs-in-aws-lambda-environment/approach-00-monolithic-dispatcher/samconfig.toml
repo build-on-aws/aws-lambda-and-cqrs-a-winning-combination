@@ -2,7 +2,7 @@ version = 0.1
 
 [default]
 [default.global.parameters]
-stack_name = "library-monolithic-dispatcher"
+stack_name = "library-system-monolithic-dispatcher"
 
 [default.build.parameters]
 cached = true

@@ -2,9 +2,10 @@
   "name": "library",
   "version": "1.0.0",
   "description": "This is a small example of CRUD to CQRS refactoring that will be deployed in AWS Lambda environment.",
-  "main": "app/handler.js",
+  "main": "src/handler.js",
   "license": "MIT",
   "devDependencies": {
+    "@types/aws-lambda": "~8.10.92",
     "@types/jest": "~29.5.7",
     "@types/node": "~20.8.10",
     "@types/supertest": "~2.0.15",
@@ -16,10 +17,13 @@
     "supertest": "~6.3.3",
     "ts-jest": "~29.1.1",
     "ts-node": "~10.9.1",
-    "typescript": "~5.2.2",
-    "@types/aws-lambda": "~8.10.92"
+    "typescript": "~5.2.2"
   },
   "dependencies": {
+    "@aws-lambda-powertools/logger": "~1.15.0",
+    "@aws-lambda-powertools/metrics": "~1.15.0",
+    "@aws-lambda-powertools/tracer": "~1.15.0",
+    "@middy/core": "~4.7.0",
     "esbuild": "~0.14.14"
   },
   "scripts": {
