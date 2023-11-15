@@ -2,7 +2,7 @@
   "name": "library",
   "version": "1.0.0",
   "description": "This is a small example of CRUD to CQRS refactoring that will be deployed in AWS Lambda environment.",
-  "main": "dist/app/server.js",
+  "main": "dist/src/server.js",
   "license": "MIT",
   "devDependencies": {
     "@types/express": "~4.17.21",
@@ -32,7 +32,7 @@
     "build": "npx tsc",
     "test": "jest --runInBand",
     "development": "npm run lint && npm run build && npm run test",
-    "start": "node dist/app/server.js",
-    "server": "concurrently 'npx tsc --watch' 'nodemon -q dist/app/server.js'"
+    "start": "node dist/src/server.js",
+    "server": "concurrently 'npx tsc --watch' 'nodemon -q dist/src/server.js'"
   }
 }

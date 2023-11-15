@@ -1,6 +1,6 @@
 import request from "supertest";
 import { expect } from "expect";
-import { app, DI, init } from "../../app/server";
+import { app, DI, init } from "../../src/server";
 
 describe("CRUD Controller: `/user`", () => {
   beforeAll(async ()=> {

@@ -2,7 +2,7 @@
   "name": "library",
   "version": "1.0.0",
   "description": "This is a small example of CRUD to CQRS refactoring that will be deployed in AWS Lambda environment.",
-  "main": "app/handler.js",
+  "main": "src/handler.js",
   "license": "MIT",
   "devDependencies": {},
   "dependencies": {
