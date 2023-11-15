@@ -7,28 +7,28 @@ const TABLE_NAME: string = 'library-system-database';
 const GSI1_INDEX: string = 'entity-type';
 
 export type LibraryTablePrimaryKey = {
-  pk: string;
-  sk: string;
+  resourceId: string;
+  subResourceId: string;
 };
 
 export type LibraryTableProps = LibraryTablePrimaryKey & {
-  type?: string;
+  type: string;
   createdAt?: Date;
   updatedAt?: Date;
 };
 
 export class LibraryTable extends Entity {
   @attribute.partitionKey.string()
-  pk: string;
+  resourceId: string;
 
   @attribute.sortKey.string()
-  sk: string;
+  subResourceId: string;
 
   @attribute.gsi.partitionKey.string({ indexName: GSI1_INDEX })
   type!: string;
 
   @attribute.gsi.sortKey.string({ indexName: GSI1_INDEX })
-  sk2!: string
+  subType!: string
 
   @attribute.date.string()
   createdAt: Date;
@@ -39,11 +39,15 @@ export class LibraryTable extends Entity {
   constructor(props: LibraryTableProps) {
     super(props);
 
-    this.pk = props.pk;
-    this.sk = props.sk;
+    this.resourceId = props.resourceId;
+    this.subResourceId = props.subResourceId;
 
-    this.type = props.type || "";
-    this.sk2 = this.sk;
+    this.type = props.type;
+
+    // We could overload the primary sort key for the purpose of the GSI, but ...
+    // Dynamode does not support multiple attribute annotations so far.
+    // That's why we will clone `subResourceId` to `subType` in the constructor.
+    this.subType = this.subResourceId;
 
     this.createdAt = props.createdAt || new Date();
     this.updatedAt = props.updatedAt || new Date();
@@ -59,12 +63,12 @@ export class LibraryTable extends Entity {
     if (!LibraryTable.manager) {
       LibraryTable.manager = new TableManager(LibraryTable, {
         tableName: TABLE_NAME,
-        partitionKey: 'pk',
-        sortKey: 'sk',
+        partitionKey: 'resourceId',
+        sortKey: 'subResourceId',
         indexes: {
           [GSI1_INDEX]: {
             partitionKey: 'type',
-            sortKey: 'sk2',
+            sortKey: 'subType',
           }
         },
         createdAt: 'createdAt',

@@ -53,16 +53,18 @@ Resources:
     Properties:
       TableName: library-system-database
       KeySchema:
-        - AttributeName: pk
+        - AttributeName: resourceId
           KeyType: HASH
-        - AttributeName: sk
+        - AttributeName: subResourceId
           KeyType: RANGE
       AttributeDefinitions:
-        - AttributeName: pk
+        - AttributeName: resourceId
           AttributeType: S
-        - AttributeName: sk
+        - AttributeName: subResourceId
           AttributeType: S
         - AttributeName: type
+          AttributeType: S
+        - AttributeName: subType
           AttributeType: S
         # ... and the rest of non-key attributes:
         #
@@ -89,7 +91,7 @@ Resources:
           KeySchema:
             - AttributeName: type
               KeyType: HASH
-            - AttributeName: sk
+            - AttributeName: subType
               KeyType: RANGE
           Projection:
             ProjectionType: ALL

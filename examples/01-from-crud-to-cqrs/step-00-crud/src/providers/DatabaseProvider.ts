@@ -1,6 +1,6 @@
 import { Dynamode } from "dynamode";
 import { DI } from "../server";
-import { LibraryTable } from "../model/LibraryTable";
+import { LibraryTable } from "../model/base/LibraryTable";
 import { Author } from "../model/Author";
 import { Book } from "../model/Book";
 import { Rental } from "../model/Rental";

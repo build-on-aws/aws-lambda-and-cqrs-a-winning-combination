@@ -1,6 +1,6 @@
 import attribute from 'dynamode/decorators';
 import { Author } from "./Author";
-import { LibraryTable, LibraryTablePrimaryKey, LibraryTableProps } from './LibraryTable';
+import { LibraryTable, LibraryTablePrimaryKey, LibraryTableProps } from './base/LibraryTable';
 
 type BookProps = LibraryTableProps & {
   status: BookStatus;
@@ -10,10 +10,10 @@ type BookProps = LibraryTableProps & {
 
 export class Book extends LibraryTable {
   @attribute.partitionKey.string({ prefix: Author.name }) // `Author#${authorId}`
-  pk!: string;
+  resourceId!: string;
 
   @attribute.sortKey.string({ prefix: Book.name }) // `Book#${bookId}`
-  sk!: string;
+  subResourceId!: string;
 
   @attribute.string()
   status: BookStatus;
@@ -36,8 +36,8 @@ export class Book extends LibraryTable {
 
   static getPrimaryKey(authorId: string, bookId: string): LibraryTablePrimaryKey {
     return {
-      pk: authorId,
-      sk: bookId
+      resourceId: authorId,
+      subResourceId: bookId
     };
   }
 }
