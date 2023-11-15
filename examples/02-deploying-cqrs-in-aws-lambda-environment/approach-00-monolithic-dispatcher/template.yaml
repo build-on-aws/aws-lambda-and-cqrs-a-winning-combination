@@ -74,9 +74,9 @@ Resources:
         #   AttributeType: S
         # - AttributeName: comment
         #   AttributeType: S
-        # - AttributeName: created_at
+        # - AttributeName: createdAt
         #   AttributeType: S
-        # - AttributeName: updated_at
+        # - AttributeName: updatedAt
         #   AttributeType: S
         # - AttributeName: title
         #   AttributeType: S

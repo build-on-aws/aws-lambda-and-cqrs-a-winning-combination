@@ -3,11 +3,13 @@ import { expect } from "expect";
 import { app, DI, init } from "../../src/server";
 
 describe("CRUD Controller: `/book`", () => {
-  beforeAll(async ()=> {
+  beforeAll(async () => {
     await init;
+    await DI.database.createEnvironment();
   });
 
   afterAll(async () => {
+    await DI.database.destroyEnvironment();
     DI.server.close();
   });
 

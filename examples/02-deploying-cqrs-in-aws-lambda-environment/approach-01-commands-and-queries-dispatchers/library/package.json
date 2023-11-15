@@ -15,7 +15,7 @@
   "scripts": {
     "lint": "npx eslint .",
     "build": "npx tsc",
-    "test": "jest --runInBand",
+    "test": "jest --runInBand --silent",
     "development": "npm run lint && npm run build && npm run test"
   }
 }

@@ -1,26 +1,49 @@
-import { Author } from './Author';
-import { BaseEntity } from './BaseEntity';
-import { User } from './User';
+import attribute from 'dynamode/decorators';
+import { Author } from "./Author";
+import { LibraryTable, LibraryTablePrimaryKey, LibraryTableProps } from './LibraryTable';
 
-export class Book extends BaseEntity {
+type BookProps = LibraryTableProps & {
+  status: BookStatus;
   title: string;
   isbn: string;
-  author: Author;
-  borrower?: User;
-  status: BookStatus = BookStatus.AVAILABLE;
+};
 
-  constructor(title: string, isbn: string, author: Author, borrower: User, status: BookStatus) {
-    super();
-    this.title = title;
-    this.isbn = isbn;
-    this.author = author;
-    this.borrower = borrower;
-    this.status = status;
+export class Book extends LibraryTable {
+  @attribute.partitionKey.string({ prefix: Author.name }) // `Author#${authorId}`
+  pk!: string;
+
+  @attribute.sortKey.string({ prefix: Book.name }) // `Book#${bookId}`
+  sk!: string;
+
+  @attribute.string()
+  status: BookStatus;
+
+  @attribute.string()
+  title: string;
+
+  @attribute.string()
+  isbn: string;
+
+  constructor(props: BookProps) {
+    super(props);
+
+    this.type = Book.name;
+
+    this.status = props.status;
+    this.title = props.title;
+    this.isbn = props.isbn;
+  }
+
+  static getPrimaryKey(authorId: string, bookId: string): LibraryTablePrimaryKey {
+    return {
+      pk: authorId,
+      sk: bookId
+    };
   }
 }
 
 export enum BookStatus {
   AVAILABLE = "AVAILABLE",
-  BORROWED = "BORROWED",
+  NOT_AVAILABLE = "NOT_AVAILABLE",
   MISSING = "MISSING"
 }

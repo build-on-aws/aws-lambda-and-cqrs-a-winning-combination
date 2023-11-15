@@ -1,13 +1,15 @@
 import request from "supertest";
 import { expect } from "expect";
-import { app, DI, init } from "../../src/server";
+import { app, init, DI } from "../../src/server";
 
 describe("CRUD Controller: `/author`", () => {
   beforeAll(async () => {
     await init;
+    await DI.database.createEnvironment();
   });
 
   afterAll(async () => {
+    await DI.database.destroyEnvironment();
     DI.server.close();
   });
 

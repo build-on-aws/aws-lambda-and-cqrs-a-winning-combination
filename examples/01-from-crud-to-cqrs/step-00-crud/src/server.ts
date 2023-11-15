@@ -6,17 +6,24 @@ import express from 'express';
 import { AuthorController } from './controllers/author';
 import { BookController } from './controllers/book';
 import { UserController } from './controllers/user';
+import { DatabaseProvider } from "./providers/DatabaseProvider";
 
 import  * as settings from '../package.json';
 
 dotenv.config();
 
+export const app = express();
+
+const port = process.env.PORT || 3000;
+const providedTableName = process.env.DYNAMODB_TABLE_NAME || null;
+
 export const DI = {} as {
-  server: http.Server
+  server: http.Server;
+  database: DatabaseProvider;
+  logger: Console;
 };
 
-export const app = express();
-const port = process.env.PORT || 3000;
+DI.logger = console;
 
 export const init = (async () => {
   app.use(express.json());
@@ -29,7 +36,8 @@ export const init = (async () => {
 
   app.use((req, res) => res.status(404).json({ message: 'No route found' }));
 
+  DI.database = new DatabaseProvider(providedTableName);
   DI.server = app.listen(port, () => {
-    console.info(`⚡️Server listening at http://localhost:${port}`);
+    DI.logger.info(`⚡️ Server is listening at port ${port}.`);
   });
 })();
