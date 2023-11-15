@@ -2,7 +2,7 @@ version = 0.1
 
 [default]
 [default.global.parameters]
-stack_name = "library-commands-and-queries-dispatchers"
+stack_name = "library-system-commands-and-queries-dispatchers"
 
 [default.build.parameters]
 cached = true

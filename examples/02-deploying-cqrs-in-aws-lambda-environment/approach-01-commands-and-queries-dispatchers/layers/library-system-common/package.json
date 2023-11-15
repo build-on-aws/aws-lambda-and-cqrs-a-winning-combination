@@ -1,6 +1,6 @@
 {
-  "name": "layer-commons",
-  "description": "Example AWS Lambda layer with commons.",
+  "name": "library-system-common-layer",
+  "description": "Example AWS Lambda layer with Library System common implementation.",
   "main": "index.ts",
   "version": "1.0.0",
   "license": "MIT",

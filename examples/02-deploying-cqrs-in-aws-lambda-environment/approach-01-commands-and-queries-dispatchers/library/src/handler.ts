@@ -1,13 +1,30 @@
+import middy from "@middy/core";
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
+import { injectLambdaContext } from "@aws-lambda-powertools/logger";
+import { logMetrics } from "@aws-lambda-powertools/metrics";
+import { captureLambdaHandler } from "@aws-lambda-powertools/tracer";
 
-import { responseBuilder } from 'commons';
+import { responseBuilder } from 'library-system-common';
+import { logger, metrics, tracer } from "./powertools/utilities";
 
-export const main = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+const plainHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+  logger.appendKeys({ resource_path: event.requestContext.resourcePath });
+
   try {
-    console.info(event);
     return responseBuilder({ message: 'Hello, World!' });
-  } catch (err) {
-    console.log(err);
+  } catch (error: any) {
+    logger.error('Unexpected error occurred', error);
+
     return responseBuilder({ message: 'Exception caught!' }, 500);
   }
+};
+
+const main = middy(plainHandler)
+  .use(captureLambdaHandler(tracer))
+  .use(logMetrics(metrics, { captureColdStartMetric: true }))
+  .use(injectLambdaContext(logger, { clearState: true }));
+
+export {
+  plainHandler,
+  main
 };

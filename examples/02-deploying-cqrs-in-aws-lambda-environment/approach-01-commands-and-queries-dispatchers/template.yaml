@@ -1,33 +1,130 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
+
 Description: |
-  'Hello World' AWS Lambda in TypeScript
+  Example infrastructure as code for different approaches of deploying CQRS architecture on top of AWS Lambda.
+
+  Approach #1: Commands and Queries Dispatchers
+
+  This example covers a refined approach when we have monolithic dispatchers, but separately for commands and queries.
+  We start to split the implementation across multiple functions, and start to share the common implementation through
+  AWS Lambda Layers, so thanks to that the commonalities and shared modules for business logic stays the same. In terms
+  of adapter implementation, we pretty much have the same code - but it's shared now.
 
 Globals:
+
   Function:
-    Timeout: 3
+    Timeout: 15
     Tracing: Active
+
   Api:
     TracingEnabled: true
 
+Metadata:
+
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: "Software Development Life Cycle (SDLC)"
+        Parameters:
+          - Stage
+
+    ParameterLabels:
+      Stage:
+        default: "Name of the software development life cycle (SDLC) stage into which we are deploying."
+
+Parameters:
+
+  Stage:
+    Type: String
+    Description: Name of the environment where the infrastructure will be deployed.
+    AllowedValues:
+      - dev
+      - test
+      - prod
+    Default: dev
+
 Resources:
-  LayerCommons:
+
+  LibrarySystemDatabase:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
+    Properties:
+      TableName: library-system-db
+      KeySchema:
+        - AttributeName: pk
+          KeyType: HASH
+        - AttributeName: sk
+          KeyType: RANGE
+      AttributeDefinitions:
+        - AttributeName: pk
+          AttributeType: S
+        - AttributeName: sk
+          AttributeType: S
+        - AttributeName: type
+          AttributeType: S
+        # ... and the rest of non-key attributes:
+        #
+        # - AttributeName: name
+        #   AttributeType: S
+        # - AttributeName: email
+        #   AttributeType: S
+        # - AttributeName: birthdate
+        #   AttributeType: S
+        # - AttributeName: status
+        #   AttributeType: S
+        # - AttributeName: comment
+        #   AttributeType: S
+        # - AttributeName: created_at
+        #   AttributeType: S
+        # - AttributeName: updated_at
+        #   AttributeType: S
+        # - AttributeName: title
+        #   AttributeType: S
+        # - AttributeName: isbn
+        #   AttributeType: S
+      GlobalSecondaryIndexes:
+        - IndexName: entity-type
+          KeySchema:
+            - AttributeName: type
+              KeyType: HASH
+            - AttributeName: sk
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+          ContributorInsightsSpecification:
+            Enabled: true
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      ContributorInsightsSpecification:
+        Enabled: true
+      BillingMode: PAY_PER_REQUEST
+      TableClass: STANDARD
+      DeletionProtectionEnabled: false
+
+  LibrarySystemApiDeployment:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: !Ref Stage
+
+  LibrarySystemCommonLayer:
     Type: AWS::Serverless::LayerVersion
     Metadata:
       BuildMethod: makefile
     Properties:
-      ContentUri: layers/commons/
+      ContentUri: layers/library-system-common/
       CompatibleRuntimes:
         - nodejs18.x
       RetentionPolicy: Delete
 
-  HelloWorldFunction:
+  LibrarySystemMonolithicDispatcherFunction:
     Type: AWS::Serverless::Function
     Metadata:
       BuildMethod: esbuild
       BuildProperties:
         External:
-          - commons
+          - library-system-common
         Minify: true
         Target: es2020
         Sourcemap: true
@@ -37,31 +134,131 @@ Resources:
       CodeUri: library/
       Handler: handler.main
       Layers:
-        - !Ref LayerCommons
+        - !Ref LibrarySystemCommonLayer
       Runtime: nodejs18.x
       Architectures:
         - x86_64
+      Environment:
+        Variables:
+          DYNAMODB_TABLE_NAME: !Ref LibrarySystemDatabase
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "dynamodb:DescribeTable"
+                - "dynamodb:PutItem"
+                - "dynamodb:GetItem"
+                - "dynamodb:UpdateItem"
+                - "dynamodb:DeleteItem"
+                - "dynamodb:ConditionCheckItem"
+              Resource:
+                - !GetAtt LibrarySystemDatabase.Arn
+            - Effect: Allow
+              Action:
+                - "dynamodb:DescribeLimits"
+                - "dynamodb:Query"
+              Resource:
+                - !GetAtt LibrarySystemDatabase.Arn
+                - !Sub "${LibrarySystemDatabase.Arn}/index/entity-type"
       Events:
-        AuthorGET:
+        # CRUD API for Authors.
+        CreateAuthor:
           Type: Api
           Properties:
+            RestApiId: !Ref LibrarySystemApiDeployment
             Path: /author
-            Method: get
-        BookGET:
+            Method: POST
+        GetAllAuthors:
           Type: Api
           Properties:
-            Path: /book
-            Method: get
-        UserGET:
+            RestApiId: !Ref LibrarySystemApiDeployment
+            Path: /author
+            Method: GET
+        GetAuthorById:
           Type: Api
           Properties:
+            RestApiId: !Ref LibrarySystemApiDeployment
+            Path: /author/{id}
+            Method: GET
+        UpdateAuthor:
+          Type: Api
+          Properties:
+            RestApiId: !Ref LibrarySystemApiDeployment
+            Path: /author/{id}
+            Method: PUT
+        DeleteAuthor:
+          Type: Api
+          Properties:
+            RestApiId: !Ref LibrarySystemApiDeployment
+            Path: /author/{id}
+            Method: DELETE
+        # CRUD API for Users.
+        CreateUser:
+          Type: Api
+          Properties:
+            RestApiId: !Ref LibrarySystemApiDeployment
             Path: /user
-            Method: get
+            Method: POST
+        GetAllUsers:
+          Type: Api
+          Properties:
+            RestApiId: !Ref LibrarySystemApiDeployment
+            Path: /user
+            Method: GET
+        GetUserById:
+          Type: Api
+          Properties:
+            RestApiId: !Ref LibrarySystemApiDeployment
+            Path: /user/{id}
+            Method: GET
+        UpdateUser:
+          Type: Api
+          Properties:
+            RestApiId: !Ref LibrarySystemApiDeployment
+            Path: /user/{id}
+            Method: PUT
+        DeleteUser:
+          Type: Api
+          Properties:
+            RestApiId: !Ref LibrarySystemApiDeployment
+            Path: /user/{id}
+            Method: DELETE
+        # CRUD API for Books.
+        CreateBook:
+          Type: Api
+          Properties:
+            RestApiId: !Ref LibrarySystemApiDeployment
+            Path: /book
+            Method: POST
+        GetAllBooks:
+          Type: Api
+          Properties:
+            RestApiId: !Ref LibrarySystemApiDeployment
+            Path: /book
+            Method: GET
+        GetBookById:
+          Type: Api
+          Properties:
+            RestApiId: !Ref LibrarySystemApiDeployment
+            Path: /book/{id}
+            Method: GET
+        UpdateBook:
+          Type: Api
+          Properties:
+            RestApiId: !Ref LibrarySystemApiDeployment
+            Path: /book/{id}
+            Method: PUT
+        DeleteBook:
+          Type: Api
+          Properties:
+            RestApiId: !Ref LibrarySystemApiDeployment
+            Path: /book/{id}
+            Method: DELETE
 
   ApplicationResourceGroup:
     Type: AWS::ResourceGroups::Group
     Properties:
-      Name: !Sub: "ApplicationInsights-SAM-${AWS::StackName}"
+      Name: !Sub "ApplicationInsights-SAM-${AWS::StackName}"
       ResourceQuery:
         Type: CLOUDFORMATION_STACK_1_0
 
@@ -73,14 +270,6 @@ Resources:
 
 Outputs:
 
-  HelloWorldApi:
-    Description: API Gateway endpoint URL for Prod stage for Hello World function
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello/"
-
-  HelloWorldFunction:
-    Description: Hello World Lambda Function ARN
-    Value: !GetAtt HelloWorldFunction.Arn
-
-  HelloWorldFunctionIamRole:
-    Description: Implicit IAM Role created for Hello World function
-    Value: !GetAtt HelloWorldFunctionRole.Arn
+  LibrarySystemApiURL:
+    Description: Amazon API Gateway endpoint URL for a given stage.
+    Value: !Sub "https://${LibrarySystemApiDeployment}.execute-api.${AWS::Region}.amazonaws.com/${Stage}"
