@@ -37,16 +37,16 @@ Then each directory contains an identical set of commands:
   - `npm run start` to start a compiled version of the server.
   - `npm run server` to recompile and host the resulting server.
 - For [examples/02-deploying-cqrs-in-aws-lambda-environment](./examples/02-deploying-cqrs-in-aws-lambda-environment) and every single collected approach:
-  - Inside `library` directory inside each approach:
-    - `npm install` to install all the dependencies.
-    - `npm run development` that is bundling the following commands:
-      - `npm run lint` to lint the *TypeScript* code.
-      - `npm run build` to compile *TypeScript*.
-      - `npm run test` to run *Jest* tests.
   - Inside individual approach directory:
-    - In places where we have shared *AWS Lambda* layers: `npm install`
-      - And the same set of commands as above in each individual directory inside `layers/`.
-    - Then for the *infrastructure as code* (implemented with use of *AWS SAM*):
+    - Inside `library` directory inside each approach:
+      - `npm install` to install all the dependencies.
+      - `npm run development` that is bundling the following commands:
+        - `npm run lint` to lint the *TypeScript* code.
+        - `npm run build` to compile *TypeScript*.
+        - `npm run test` to run *Jest* tests.
+    - In places, where we have shared *AWS Lambda* layers - invoke `npm install` in the root directory for the approach.
+      - And you can use the same set of commands as above in each individual directory inside `layers/` independently.
+    - Then, for the *infrastructure as code* (implemented with use of *AWS SAM*):
       - `sam validate`
       - `sam build`
       - `sam deploy`
@@ -77,12 +77,12 @@ Example is written in *TypeScript* and starts from a very simplistic *CRUD (Crea
 
 Starting from the initial stage, the internals of the application looks as follows:
 
-![Starting point for the discussion: CRUD-like implementation of the system](./docs/step-00-crud.png)
+![Starting point for the discussion: CRUD-like implementation of the system](./docs/step-00-crud-components.png)
 
 Application have 3 entities:
 
 - `Author` with `name` field.
-- `User` with fields: `email`, `name`, `status`, and `statusComment` (as name suggests - relevant to the `status` field).
+- `User` with fields: `email`, `name`, `status`, and `comment` (as name suggests - relevant to the `status` field).
 - `Book` with fields `title`, `isbn` (which is a short for *International Standard Book Number*), `author` (pointing to `Author` entity), `borrower` (pointing to `User` entity), and `status`.
 
 If you have a closer look on the *API*, it is very CRUD-oriented:
