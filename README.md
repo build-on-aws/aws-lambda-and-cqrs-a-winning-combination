@@ -45,11 +45,11 @@ Then each directory contains an identical set of commands:
       - `npm run test` to run *Jest* tests.
   - Inside individual approach directory:
     - In places where we have shared *AWS Lambda* layers: `npm install`
-      - And the same set of commands as above in each individual layer directory.
-    - Then for the *infrastructure as code*:
+      - And the same set of commands as above in each individual directory inside `layers/`.
+    - Then for the *infrastructure as code* (implemented with use of *AWS SAM*):
       - `sam validate`
       - `sam build`
-      - `sam deploy --guided`
+      - `sam deploy`
 
 ## Screenplay
 
