@@ -2,7 +2,7 @@ version = 0.1
 
 [default]
 [default.global.parameters]
-stack_name = "library-system-monolithic-dispatcher"
+stack_name = "approach-00"
 
 [default.build.parameters]
 cached = true

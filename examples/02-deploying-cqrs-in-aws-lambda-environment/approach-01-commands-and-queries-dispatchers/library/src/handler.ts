@@ -19,12 +19,18 @@ const plainHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProx
   }
 };
 
-const main = middy(plainHandler)
+const commands = middy(plainHandler)
+  .use(captureLambdaHandler(tracer))
+  .use(logMetrics(metrics, { captureColdStartMetric: true }))
+  .use(injectLambdaContext(logger, { clearState: true }));
+
+const queries = middy(plainHandler)
   .use(captureLambdaHandler(tracer))
   .use(logMetrics(metrics, { captureColdStartMetric: true }))
   .use(injectLambdaContext(logger, { clearState: true }));
 
 export {
   plainHandler,
-  main
+  commands,
+  queries
 };

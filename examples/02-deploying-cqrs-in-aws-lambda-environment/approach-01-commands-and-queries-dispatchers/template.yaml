@@ -51,7 +51,7 @@ Resources:
     DeletionPolicy: Delete
     UpdateReplacePolicy: Delete
     Properties:
-      TableName: library-system-db
+      TableName: library-system-database
       KeySchema:
         - AttributeName: pk
           KeyType: HASH
@@ -103,7 +103,7 @@ Resources:
       TableClass: STANDARD
       DeletionProtectionEnabled: false
 
-  LibrarySystemApiDeployment:
+  LibrarySystemAPI:
     Type: AWS::Serverless::Api
     Properties:
       StageName: !Ref Stage
@@ -118,7 +118,7 @@ Resources:
         - nodejs18.x
       RetentionPolicy: Delete
 
-  LibrarySystemMonolithicDispatcherFunction:
+  CommandsDispatcher:
     Type: AWS::Serverless::Function
     Metadata:
       BuildMethod: esbuild
@@ -132,7 +132,7 @@ Resources:
           - src/handler.ts
     Properties:
       CodeUri: library/
-      Handler: handler.main
+      Handler: handler.commands
       Layers:
         - !Ref LibrarySystemCommonLayer
       Runtime: nodejs18.x
@@ -161,99 +161,137 @@ Resources:
                 - !GetAtt LibrarySystemDatabase.Arn
                 - !Sub "${LibrarySystemDatabase.Arn}/index/entity-type"
       Events:
-        # CRUD API for Authors.
         CreateAuthor:
           Type: Api
           Properties:
-            RestApiId: !Ref LibrarySystemApiDeployment
+            RestApiId: !Ref LibrarySystemAPI
             Path: /author
             Method: POST
-        GetAllAuthors:
-          Type: Api
-          Properties:
-            RestApiId: !Ref LibrarySystemApiDeployment
-            Path: /author
-            Method: GET
-        GetAuthorById:
-          Type: Api
-          Properties:
-            RestApiId: !Ref LibrarySystemApiDeployment
-            Path: /author/{id}
-            Method: GET
         UpdateAuthor:
           Type: Api
           Properties:
-            RestApiId: !Ref LibrarySystemApiDeployment
+            RestApiId: !Ref LibrarySystemAPI
             Path: /author/{id}
             Method: PUT
         DeleteAuthor:
           Type: Api
           Properties:
-            RestApiId: !Ref LibrarySystemApiDeployment
+            RestApiId: !Ref LibrarySystemAPI
             Path: /author/{id}
             Method: DELETE
-        # CRUD API for Users.
         CreateUser:
           Type: Api
           Properties:
-            RestApiId: !Ref LibrarySystemApiDeployment
+            RestApiId: !Ref LibrarySystemAPI
             Path: /user
             Method: POST
-        GetAllUsers:
-          Type: Api
-          Properties:
-            RestApiId: !Ref LibrarySystemApiDeployment
-            Path: /user
-            Method: GET
-        GetUserById:
-          Type: Api
-          Properties:
-            RestApiId: !Ref LibrarySystemApiDeployment
-            Path: /user/{id}
-            Method: GET
         UpdateUser:
           Type: Api
           Properties:
-            RestApiId: !Ref LibrarySystemApiDeployment
+            RestApiId: !Ref LibrarySystemAPI
             Path: /user/{id}
             Method: PUT
         DeleteUser:
           Type: Api
           Properties:
-            RestApiId: !Ref LibrarySystemApiDeployment
+            RestApiId: !Ref LibrarySystemAPI
             Path: /user/{id}
             Method: DELETE
-        # CRUD API for Books.
         CreateBook:
           Type: Api
           Properties:
-            RestApiId: !Ref LibrarySystemApiDeployment
+            RestApiId: !Ref LibrarySystemAPI
             Path: /book
             Method: POST
-        GetAllBooks:
-          Type: Api
-          Properties:
-            RestApiId: !Ref LibrarySystemApiDeployment
-            Path: /book
-            Method: GET
-        GetBookById:
-          Type: Api
-          Properties:
-            RestApiId: !Ref LibrarySystemApiDeployment
-            Path: /book/{id}
-            Method: GET
         UpdateBook:
           Type: Api
           Properties:
-            RestApiId: !Ref LibrarySystemApiDeployment
+            RestApiId: !Ref LibrarySystemAPI
             Path: /book/{id}
             Method: PUT
         DeleteBook:
           Type: Api
           Properties:
-            RestApiId: !Ref LibrarySystemApiDeployment
+            RestApiId: !Ref LibrarySystemAPI
             Path: /book/{id}
             Method: DELETE
+
+  QueriesDispatcher:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        External:
+          - library-system-common
+        Minify: true
+        Target: es2020
+        Sourcemap: true
+        EntryPoints:
+          - src/handler.ts
+    Properties:
+      CodeUri: library/
+      Handler: handler.queries
+      Layers:
+        - !Ref LibrarySystemCommonLayer
+      Runtime: nodejs18.x
+      Architectures:
+        - x86_64
+      Environment:
+        Variables:
+          DYNAMODB_TABLE_NAME: !Ref LibrarySystemDatabase
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "dynamodb:DescribeTable"
+                - "dynamodb:GetItem"
+                - "dynamodb:ConditionCheckItem"
+              Resource:
+                - !GetAtt LibrarySystemDatabase.Arn
+            - Effect: Allow
+              Action:
+                - "dynamodb:DescribeLimits"
+                - "dynamodb:Query"
+              Resource:
+                - !GetAtt LibrarySystemDatabase.Arn
+                - !Sub "${LibrarySystemDatabase.Arn}/index/entity-type"
+      Events:
+        GetAllAuthors:
+          Type: Api
+          Properties:
+            RestApiId: !Ref LibrarySystemAPI
+            Path: /author
+            Method: GET
+        GetAuthorById:
+          Type: Api
+          Properties:
+            RestApiId: !Ref LibrarySystemAPI
+            Path: /author/{id}
+            Method: GET
+        GetAllUsers:
+          Type: Api
+          Properties:
+            RestApiId: !Ref LibrarySystemAPI
+            Path: /user
+            Method: GET
+        GetUserById:
+          Type: Api
+          Properties:
+            RestApiId: !Ref LibrarySystemAPI
+            Path: /user/{id}
+            Method: GET
+        GetAllBooks:
+          Type: Api
+          Properties:
+            RestApiId: !Ref LibrarySystemAPI
+            Path: /book
+            Method: GET
+        GetBookById:
+          Type: Api
+          Properties:
+            RestApiId: !Ref LibrarySystemAPI
+            Path: /book/{id}
+            Method: GET
 
   ApplicationResourceGroup:
     Type: AWS::ResourceGroups::Group
@@ -272,4 +310,4 @@ Outputs:
 
   LibrarySystemApiURL:
     Description: Amazon API Gateway endpoint URL for a given stage.
-    Value: !Sub "https://${LibrarySystemApiDeployment}.execute-api.${AWS::Region}.amazonaws.com/${Stage}"
+    Value: !Sub "https://${LibrarySystemAPI}.execute-api.${AWS::Region}.amazonaws.com/${Stage}"

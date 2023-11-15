@@ -49,7 +49,7 @@ Resources:
     DeletionPolicy: Delete
     UpdateReplacePolicy: Delete
     Properties:
-      TableName: library-system-db
+      TableName: library-system-database
       KeySchema:
         - AttributeName: pk
           KeyType: HASH
@@ -101,12 +101,12 @@ Resources:
       TableClass: STANDARD
       DeletionProtectionEnabled: false
 
-  LibrarySystemApiDeployment:
+  LibrarySystemAPI:
     Type: AWS::Serverless::Api
     Properties:
       StageName: !Ref Stage
 
-  LibrarySystemMonolithicDispatcherFunction:
+  MonolithicDispatcher:
     Type: AWS::Serverless::Function
     Metadata:
       BuildMethod: esbuild
@@ -149,93 +149,93 @@ Resources:
         CreateAuthor:
           Type: Api
           Properties:
-            RestApiId: !Ref LibrarySystemApiDeployment
+            RestApiId: !Ref LibrarySystemAPI
             Path: /author
             Method: POST
         GetAllAuthors:
           Type: Api
           Properties:
-            RestApiId: !Ref LibrarySystemApiDeployment
+            RestApiId: !Ref LibrarySystemAPI
             Path: /author
             Method: GET
         GetAuthorById:
           Type: Api
           Properties:
-            RestApiId: !Ref LibrarySystemApiDeployment
+            RestApiId: !Ref LibrarySystemAPI
             Path: /author/{id}
             Method: GET
         UpdateAuthor:
           Type: Api
           Properties:
-            RestApiId: !Ref LibrarySystemApiDeployment
+            RestApiId: !Ref LibrarySystemAPI
             Path: /author/{id}
             Method: PUT
         DeleteAuthor:
           Type: Api
           Properties:
-            RestApiId: !Ref LibrarySystemApiDeployment
+            RestApiId: !Ref LibrarySystemAPI
             Path: /author/{id}
             Method: DELETE
         # CRUD API for Users.
         CreateUser:
           Type: Api
           Properties:
-            RestApiId: !Ref LibrarySystemApiDeployment
+            RestApiId: !Ref LibrarySystemAPI
             Path: /user
             Method: POST
         GetAllUsers:
           Type: Api
           Properties:
-            RestApiId: !Ref LibrarySystemApiDeployment
+            RestApiId: !Ref LibrarySystemAPI
             Path: /user
             Method: GET
         GetUserById:
           Type: Api
           Properties:
-            RestApiId: !Ref LibrarySystemApiDeployment
+            RestApiId: !Ref LibrarySystemAPI
             Path: /user/{id}
             Method: GET
         UpdateUser:
           Type: Api
           Properties:
-            RestApiId: !Ref LibrarySystemApiDeployment
+            RestApiId: !Ref LibrarySystemAPI
             Path: /user/{id}
             Method: PUT
         DeleteUser:
           Type: Api
           Properties:
-            RestApiId: !Ref LibrarySystemApiDeployment
+            RestApiId: !Ref LibrarySystemAPI
             Path: /user/{id}
             Method: DELETE
         # CRUD API for Books.
         CreateBook:
           Type: Api
           Properties:
-            RestApiId: !Ref LibrarySystemApiDeployment
+            RestApiId: !Ref LibrarySystemAPI
             Path: /book
             Method: POST
         GetAllBooks:
           Type: Api
           Properties:
-            RestApiId: !Ref LibrarySystemApiDeployment
+            RestApiId: !Ref LibrarySystemAPI
             Path: /book
             Method: GET
         GetBookById:
           Type: Api
           Properties:
-            RestApiId: !Ref LibrarySystemApiDeployment
+            RestApiId: !Ref LibrarySystemAPI
             Path: /book/{id}
             Method: GET
         UpdateBook:
           Type: Api
           Properties:
-            RestApiId: !Ref LibrarySystemApiDeployment
+            RestApiId: !Ref LibrarySystemAPI
             Path: /book/{id}
             Method: PUT
         DeleteBook:
           Type: Api
           Properties:
-            RestApiId: !Ref LibrarySystemApiDeployment
+            RestApiId: !Ref LibrarySystemAPI
             Path: /book/{id}
             Method: DELETE
 
@@ -256,4 +256,4 @@ Outputs:
 
   LibrarySystemApiURL:
     Description: Amazon API Gateway endpoint URL for a given stage.
-    Value: !Sub "https://${LibrarySystemApiDeployment}.execute-api.${AWS::Region}.amazonaws.com/${Stage}"
+    Value: !Sub "https://${LibrarySystemAPI}.execute-api.${AWS::Region}.amazonaws.com/${Stage}"
