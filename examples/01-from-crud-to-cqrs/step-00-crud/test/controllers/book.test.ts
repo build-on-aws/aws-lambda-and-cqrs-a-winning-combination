@@ -1,21 +1,12 @@
-import request from "supertest";
-import { expect } from "expect";
-import { app, DI, init } from "../../src/server";
+import { start, stop, getAgent } from "../helpers/common";
 
 describe("CRUD Controller: `/book`", () => {
-  beforeAll(async () => {
-    await init;
-    await DI.database.createEnvironment();
-  });
+  beforeAll(start);
+  afterAll(stop);
 
-  afterAll(async () => {
-    await DI.database.destroyEnvironment();
-    DI.server.close();
-  });
+  const agent = getAgent();
 
   let id: string = "";
-
-  const agent = request(app);
 
   it("Create", async () => {
     await agent

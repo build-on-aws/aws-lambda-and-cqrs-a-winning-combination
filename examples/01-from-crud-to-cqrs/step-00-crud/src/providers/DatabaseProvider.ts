@@ -1,5 +1,4 @@
 import { Dynamode } from "dynamode";
-import { DI } from "../server";
 import { LibraryTable } from "../model/base/LibraryTable";
 import { Author } from "../model/Author";
 import { Book } from "../model/Book";
@@ -17,7 +16,7 @@ export class DatabaseProvider {
   public readonly rentals;
   public readonly users;
 
-  constructor(providedTableName: string | null) {
+  constructor(providedTableName: string | null, logger: Console) {
     this.localDynamoDB = !providedTableName;
     this.name = providedTableName || LibraryTable.getDefaultTableName();
 
@@ -32,9 +31,9 @@ export class DatabaseProvider {
       //
       Dynamode.ddb.local('http://127.0.0.1:8000');
 
-      DI.logger.info(`🔨 Using local DynamoDB listening at port 8000 with default '${this.name}' table name.`);
+      logger.info(`🔨 Using local DynamoDB listening at port 8000 with default '${this.name}' table name.`);
     } else {
-      DI.logger.info(`🌍 Using DynamoDB service with provided '${this.name}' table name.`);
+      logger.info(`🌍 Using DynamoDB service with provided '${this.name}' table name.`);
     }
 
     this.manager = LibraryTable.getTableManager();
@@ -53,7 +52,7 @@ export class DatabaseProvider {
 
   async destroyEnvironment() {
     if (this.localDynamoDB) {
-      await LibraryTable.delete();
+      await LibraryTable.destroy();
     }
   }
 }

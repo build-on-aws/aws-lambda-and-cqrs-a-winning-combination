@@ -1,7 +1,7 @@
 import * as dotenv from 'dotenv';
 
 import http from 'http';
-import express from 'express';
+import express, { NextFunction, Request, Response } from 'express';
 
 import { AuthorController } from './controllers/author';
 import { BookController } from './controllers/book';
@@ -34,9 +34,21 @@ export const init = (async () => {
   app.use('/book', BookController);
   app.use('/user', UserController);
 
-  app.use((req, res) => res.status(404).json({ message: 'No route found' }));
+  app.use((req, res) => {
+    res.status(404).json({ message: 'No route found' })
+  });
 
-  DI.database = new DatabaseProvider(providedTableName);
+  // Why disable this rule? Because error handler in express needs to have arity of 4 always.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  app.use((error: Error, req: Request, res: Response, next: NextFunction) => {
+    DI.logger.error(error);
+
+    res.setHeader('Content-Type', 'application/json');
+    res.status(500).json({ message: 'Uncaught Exception' });
+  })
+
+  DI.database = new DatabaseProvider(providedTableName, DI.logger);
+
   DI.server = app.listen(port, () => {
     DI.logger.info(`⚡️ Server is listening at port ${port}.`);
   });

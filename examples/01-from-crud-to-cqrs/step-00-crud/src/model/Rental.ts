@@ -31,8 +31,6 @@ export class Rental extends LibraryTable {
   constructor(props: RentalProps) {
     super(props);
 
-    this.type = Rental.name;
-
     this.name = props.name;
     this.email = props.email;
     this.status = props.status;

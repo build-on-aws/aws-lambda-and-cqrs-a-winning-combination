@@ -27,8 +27,6 @@ export class Book extends LibraryTable {
   constructor(props: BookProps) {
     super(props);
 
-    this.type = Book.name;
-
     this.status = props.status;
     this.title = props.title;
     this.isbn = props.isbn;

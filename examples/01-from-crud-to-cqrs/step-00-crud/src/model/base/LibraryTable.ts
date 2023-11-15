@@ -1,7 +1,6 @@
 import attribute from 'dynamode/decorators';
 import Entity from 'dynamode/entity';
 import { TableManager } from "dynamode";
-import { Metadata } from "dynamode/table/types";
 
 const TABLE_NAME: string = 'library-system-database';
 const GSI1_INDEX: string = 'entity-type';
@@ -12,7 +11,6 @@ export type LibraryTablePrimaryKey = {
 };
 
 export type LibraryTableProps = LibraryTablePrimaryKey & {
-  type: string;
   createdAt?: Date;
   updatedAt?: Date;
 };
@@ -42,7 +40,7 @@ export class LibraryTable extends Entity {
     this.resourceId = props.resourceId;
     this.subResourceId = props.subResourceId;
 
-    this.type = props.type;
+    this.type = this.dynamodeEntity;
 
     // We could overload the primary sort key for the purpose of the GSI, but ...
     // Dynamode does not support multiple attribute annotations so far.
@@ -53,7 +51,7 @@ export class LibraryTable extends Entity {
     this.updatedAt = props.updatedAt || new Date();
   }
 
-  static manager: TableManager<Metadata<typeof LibraryTable>, typeof LibraryTable>;
+  static manager: any;
 
   static getDefaultTableName() {
     return TABLE_NAME;
@@ -83,7 +81,7 @@ export class LibraryTable extends Entity {
     await LibraryTable.manager.createTable();
   }
 
-  static async delete() {
+  static async destroy() {
     await LibraryTable.manager.deleteTable(TABLE_NAME);
   }
 }

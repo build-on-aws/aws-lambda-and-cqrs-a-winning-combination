@@ -30,8 +30,6 @@ export class User extends LibraryTable {
   constructor(props: UserProps) {
     super(props);
 
-    this.type = User.name;
-
     this.name = props.name;
     this.email = props.email;
     this.status = props.status;

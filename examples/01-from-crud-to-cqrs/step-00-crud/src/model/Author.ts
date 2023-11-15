@@ -22,8 +22,6 @@ export class Author extends LibraryTable {
   constructor(props: AuthorProps) {
     super(props);
 
-    this.type = Author.name;
-
     this.name = props.name;
     this.birthdate = props.birthdate;
   }
