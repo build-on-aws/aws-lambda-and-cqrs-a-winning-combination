@@ -69,7 +69,7 @@ describe('CRUD Controller: /user', () => {
       email: 'jane@example.com',
       status: 'VERIFIED',
       comment: 'This is a comment.'
-    }
+    };
 
     await agent
       .put('/user/' + id)

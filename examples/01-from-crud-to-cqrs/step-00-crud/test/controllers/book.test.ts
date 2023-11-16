@@ -69,7 +69,7 @@ describe('CRUD Controller: /book', () => {
       title: 'Yet Another Changed Title',
       isbn: '960-425-059-0',
       status: 'MISSING'
-    }
+    };
 
     await agent
       .put('/book/by-author/' + authorId + '/' + id)

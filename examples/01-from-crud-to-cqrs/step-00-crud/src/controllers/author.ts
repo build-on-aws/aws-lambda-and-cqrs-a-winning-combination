@@ -24,7 +24,6 @@ router.post('/', async (req: Request, res: Response) => {
 // Read (All).
 
 router.get('/', async (req: Request, res: Response) => {
-  // TODO: Pagination.
   const collection = await DI.database.authors.query()
     .partitionKey('type')
     .eq(Author.name)
