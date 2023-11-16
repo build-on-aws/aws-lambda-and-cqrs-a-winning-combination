@@ -23,12 +23,15 @@ If you would like to start all the dependent services, run the following command
 # After cloning it, inside the the repository root:
 
 $ cd examples
-$ finch compose up -d             # ... or `docker compose up -d`
+$ finch compose up -d                               # ... or compatible ones like: `docker compose up -d`
+$ cd 01-from-crud-to-cqrs/step-00-crud
+$ npm install
+$ npm run create-database
 ```
 
 Then each directory contains an identical set of commands:
 
-- For [examples/01-from-crud-to-cqrs](./examples/01-from-crud-to-cqrs) and subsequent steps:
+- For [examples/01-from-crud-to-cqrs](./examples/01-from-crud-to-cqrs) and each directory that represent a subsequent step:
   - `npm install` to install all the dependencies.
   - `npm run development` that is bundling the following commands:
     - `npm run lint` to lint the *TypeScript* code.
@@ -36,8 +39,8 @@ Then each directory contains an identical set of commands:
     - `npm run test` to run *Jest* tests.
   - `npm run start` to start a compiled version of the server.
   - `npm run server` to recompile and host the resulting server.
-- For [examples/02-deploying-cqrs-in-aws-lambda-environment](./examples/02-deploying-cqrs-in-aws-lambda-environment) and every single collected approach:
-  - Inside individual approach directory:
+- For [examples/02-deploying-cqrs-in-aws-lambda-environment](./examples/02-deploying-cqrs-in-aws-lambda-environment) and every single directory that represent a separate approach:
+  - Inside each individual directory:
     - Inside `library` directory inside each approach:
       - `npm install` to install all the dependencies.
       - `npm run development` that is bundling the following commands:

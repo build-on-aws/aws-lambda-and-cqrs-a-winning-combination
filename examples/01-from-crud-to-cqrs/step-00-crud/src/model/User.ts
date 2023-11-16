@@ -1,14 +1,20 @@
 import attribute from 'dynamode/decorators';
+import KSUID from 'ksuid';
 import { LibraryTable, LibraryTablePrimaryKey, LibraryTableProps } from './base/LibraryTable';
+import { UserMapping } from '../mapping/UserMapping';
+import { IMappable } from '../mapping/interfaces/IMappable';
+import { IUpdateable } from '../mapping/interfaces/IUpdateable';
 
-type UserProps = LibraryTableProps & {
+type UserFields = {
   name: string;
   email: string;
   status: UserStatus;
   comment: string;
 };
 
-export class User extends LibraryTable {
+type UserProps = LibraryTableProps & UserFields;
+
+export class User extends LibraryTable implements IMappable, IUpdateable {
   @attribute.partitionKey.string({ prefix: User.name }) // `User#${userId}`
   resourceId!: string;
 
@@ -36,6 +42,35 @@ export class User extends LibraryTable {
     this.comment = props.comment;
   }
 
+  toMapping(): UserMapping {
+    return UserMapping.fromEntity(this);
+  }
+
+  toUpdateStructure(): { set: UserFields } {
+    return {
+      set: {
+        name: this.name,
+        email: this.email,
+        status: this.status,
+        comment: this.comment
+      }
+    };
+  }
+
+  static fromMapping(id: KSUID, mapping: UserMapping): User {
+    return new User({
+      ...User.getPrimaryKey(id.string),
+      name: mapping.name,
+      email: mapping.email,
+      status: UserStatus[(mapping.status ?? UserStatus.NOT_VERIFIED) as keyof typeof UserStatus],
+      comment: mapping.comment ?? ''
+    })
+  }
+
+  static fromCompleteMapping(mapping: UserMapping): User {
+    return User.fromMapping(KSUID.parse(mapping.id!), mapping);
+  }
+
   static getPrimaryKey(userId: string): LibraryTablePrimaryKey {
     return {
       resourceId: userId,
@@ -45,8 +80,8 @@ export class User extends LibraryTable {
 }
 
 export enum UserStatus {
-  NOT_VERIFIED = "NOT VERIFIED",
-  VERIFIED = "VERIFIED",
-  SUSPENDED = "SUSPENDED"
+  NOT_VERIFIED = 'NOT_VERIFIED',
+  VERIFIED = 'VERIFIED',
+  SUSPENDED = 'SUSPENDED'
 }
 

@@ -1,91 +1,71 @@
 import Router from 'express-promise-router';
 import KSUID from 'ksuid';
-import moment from 'moment';
 import { Request, Response } from 'express';
+import { DI } from '../server';
 import { Author } from '../model/Author';
-import { DI } from "../server";
+import { AuthorMapping } from '../mapping/AuthorMapping';
 
 const router = Router();
 
 // Create.
+
 router.post('/', async (req: Request, res: Response) => {
   const payload = req.body;
-
-  // TODO: Input validation.
+  const mapping = AuthorMapping.validateAndConstructFromPayload(payload);
 
   const id = await KSUID.random();
-  const entity = new Author({
-    ...Author.getPrimaryKey(id.string),
-    name: payload.name,
-    birthdate: moment(payload.birthdate).toDate()
-  });
+  const entity = Author.fromMapping(id, mapping);
 
   await DI.database.authors.put(entity);
 
-  // TODO: No manual mapping!
-  res.json({ id: entity.resourceId, name: entity.name, birthdate: entity.birthdate });
+  res.json(entity.toMapping());
 });
 
 // Read (All).
+
 router.get('/', async (req: Request, res: Response) => {
+  // TODO: Pagination.
   const collection = await DI.database.authors.query()
     .partitionKey('type')
     .eq(Author.name)
     .run();
 
-  // TODO: No manual mapping!
-  res.json(collection.items.map((entity: Author) => {
-    return {
-      id: entity.resourceId,
-      name: entity.name,
-      birthdate: entity.birthdate
-    }
-  }));
+  res.json(collection.items.map((entity: Author) => entity.toMapping()));
 });
 
 // Read (One).
 
-router.get('/:id', async (req: Request<{id: string}>, res: Response) => {
+router.get('/:id', async (req: Request<{ id: string }>, res: Response) => {
   const id = req.params.id;
-
-  // TODO: Input validation.
+  AuthorMapping.validateIdentifiers(id);
 
   const entity = await DI.database.authors.get(Author.getPrimaryKey(id));
 
-  // TODO: No manual mapping!
-  res.json({ id: entity.resourceId, name: entity.name, birthdate: entity.birthdate });
+  res.json(entity.toMapping());
 });
 
 // Update.
 
-router.put('/:id', async (req: Request<{id: string}>, res: Response) => {
-  const payload = req.body;
+router.put('/:id', async (req: Request<{ id: string }>, res: Response) => {
   const id = req.params.id;
+  const payload = req.body;
+  const mapping = AuthorMapping.validateAndConstructFromPayload({ id, ...payload });
 
-  // TODO: Input validation.
+  const entity = Author.fromCompleteMapping(mapping);
+  const updatedEntity = await DI.database.authors.update(Author.getPrimaryKey(mapping.id!), entity.toUpdateStructure());
 
-  const entity = await DI.database.authors.update(Author.getPrimaryKey(id), {
-    set: {
-      name: payload.name,
-      birthdate: payload.birthdate
-    }
-  });
-
-  // TODO: No manual mapping!
-  res.json({ id: entity.resourceId, name: entity.name, birthdate: entity.birthdate });
+  res.json(updatedEntity.toMapping());
 });
 
 // Delete.
 
-router.delete('/:id', async (req: Request<{id: string}>, res: Response) => {
+router.delete('/:id', async (req: Request<{ id: string }>, res: Response) => {
   const id = req.params.id;
-
-  // TODO: Input validation.
+  AuthorMapping.validateIdentifiers(id);
 
   await DI.database.authors.delete(Author.getPrimaryKey(id));
 
-  // TODO: No manual mapping!
-  res.json({ id });
+  res.json(AuthorMapping.emptyMapping(id));
 });
 
 export const AuthorController = router;

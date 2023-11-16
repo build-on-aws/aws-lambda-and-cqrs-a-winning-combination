@@ -1,6 +1,7 @@
-import request from "supertest";
-import { app } from "../../src/server";
-import { DI, init } from "../../src/server";
+import KSUID from 'ksuid';
+import request from 'supertest';
+import { app } from '../../src/server';
+import { DI, init } from '../../src/server';
 
 export const start = async () => {
   await init;
@@ -16,7 +17,25 @@ export const getAgent = () => request(app);
 
 export const getFakeAuthor = () => {
   return {
-    name: "John Doe",
-    birthdate: "1975-02-15T10:10:00.000Z"
+    name: 'John Doe',
+    birthdate: '1975-02-15T10:10:00.000Z'
+  }
+};
+
+export const getFakeUser = () => {
+  return {
+    name: 'James Doe',
+    email: 'jd@example.com'
+  }
+};
+
+export const getFakeAuthorId = () => {
+  return KSUID.randomSync().string;
+}
+
+export const getFakeBook = () => {
+  return {
+    title: 'Yet Another Book About Something',
+    isbn: '80-902734-1-6'
   }
 };
