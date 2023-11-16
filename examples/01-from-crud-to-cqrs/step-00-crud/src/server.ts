@@ -7,6 +7,7 @@ import logger from 'morgan';
 import { AuthorController } from './controllers/author';
 import { BookController } from './controllers/book';
 import { UserController } from './controllers/user';
+import { RentalController } from './controllers/rental';
 import { DatabaseProvider } from "./providers/DatabaseProvider";
 
 import  * as settings from '../package.json';
@@ -34,6 +35,7 @@ export const init = (async () => {
 
   app.use('/author', AuthorController);
   app.use('/book', BookController);
+  app.use('/rental', RentalController);
   app.use('/user', UserController);
 
   app.use((req, res) => {

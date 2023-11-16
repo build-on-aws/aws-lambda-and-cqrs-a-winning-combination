@@ -13,6 +13,18 @@ export const stop = async () => {
   DI.server.close();
 };
 
+const getKSUID = () => {
+  return KSUID.randomSync().string;
+}
+
+export const getFakeAuthorId = () => {
+  return getKSUID();
+}
+
+export const getFakeBookId = () => {
+  return getKSUID();
+}
+
 export const getAgent = () => request(app);
 
 export const getFakeAuthor = () => {
@@ -29,8 +41,13 @@ export const getFakeUser = () => {
   }
 };
 
-export const getFakeAuthorId = () => {
-  return KSUID.randomSync().string;
+export const getFakeUserWithId = () => {
+  const fakeUser = getFakeUser();
+
+  return {
+    id: getKSUID(),
+    ...fakeUser
+  }
 }
 
 export const getFakeBook = () => {

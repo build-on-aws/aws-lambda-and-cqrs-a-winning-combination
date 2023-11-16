@@ -4,8 +4,9 @@ import { MappingValidationError } from '../exceptions/MappingValidationError';
 export abstract class BaseMapping {
   public id?: string;
 
-  static emptyMapping(identifier: string) {
-    return { id: identifier };
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  static emptyMapping(primaryIdentifier: string, secondaryIdentifier?: string): any {
+    return { id: primaryIdentifier };
   }
 
   static validateIdentifiers(primaryIdentifier?: string, secondaryIdentifier?: string) {
