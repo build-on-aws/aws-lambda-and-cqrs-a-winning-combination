@@ -52,6 +52,7 @@ export const getFakeUserWithId = () => {
 
 export const getFakeBook = () => {
   return {
+    authorId: getFakeAuthorId(),
     title: 'Yet Another Book About Something',
     isbn: '80-902734-1-6'
   }

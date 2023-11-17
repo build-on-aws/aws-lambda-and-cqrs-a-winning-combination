@@ -21,7 +21,6 @@ services:
       # - "../docs/c4/01-from-crud-to-cqrs/step-01-better-crud:/usr/local/structurizr"
       # - "../docs/c4/01-from-crud-to-cqrs/step-02-cqrs:/usr/local/structurizr"
       # - "../docs/c4/01-from-crud-to-cqrs/step-03-cqrs-with-ports-and-adapters:/usr/local/structurizr"
-      # - "../docs/c4/01-from-crud-to-cqrs/step-04-final-stage:/usr/local/structurizr"
       # - "../docs/c4/02-deploying-cqrs-in-aws-lambda-environment/approach-00-monolithic-dispatcher:/usr/local/structurizr"
       # - "../docs/c4/02-deploying-cqrs-in-aws-lambda-environment/approach-01-commands-and-queries-dispatchers:/usr/local/structurizr"
       # - "../docs/c4/02-deploying-cqrs-in-aws-lambda-environment/approach-02-individual-commands-only:/usr/local/structurizr"

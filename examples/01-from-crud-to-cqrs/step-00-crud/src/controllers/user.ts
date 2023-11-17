@@ -1,6 +1,7 @@
 import Router from 'express-promise-router';
 import KSUID from 'ksuid';
 import { Request, Response } from 'express';
+import { extractPaginationDetails } from "./helpers/pagination";
 import { DI } from '../server';
 import { User } from '../model/User';
 import { UserMapping } from '../mapping/UserMapping';
@@ -24,9 +25,14 @@ router.post('/', async (req: Request, res: Response) => {
 // Read (All).
 
 router.get('/', async (req: Request, res: Response) => {
+  const pagination = extractPaginationDetails(req, User.getPrimaryKey);
+
   const collection = await DI.database.users.query()
     .partitionKey('type')
     .eq(User.name)
+    .limit(pagination.pageSize)
+    .sort(pagination.sortOrder)
+    .startAt(pagination.startAtKey)
     .run();
 
   res.json(collection.items.map((entity: User) => entity.toMapping()));

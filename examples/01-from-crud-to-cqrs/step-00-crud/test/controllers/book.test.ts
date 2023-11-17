@@ -1,5 +1,5 @@
 import { BookStatus } from "../../src/model/Book";
-import { getAgent, getFakeAuthorId, getFakeBook, start, stop } from '../helpers/common';
+import { getAgent, getFakeBook, start, stop } from '../helpers/common';
 
 describe('CRUD Controller: /book', () => {
   beforeAll(start);
@@ -9,11 +9,11 @@ describe('CRUD Controller: /book', () => {
 
   let id: string = '';
   const book = getFakeBook();
-  const authorId = getFakeAuthorId();
+  const authorId = book.authorId;
 
   it('Verifying validation during creation', async () => {
     await agent
-      .post('/book/by-author/' + authorId)
+      .post('/book')
       .set('Content-Type', 'application/json')
       .send({})
       .then(res => {
@@ -23,7 +23,7 @@ describe('CRUD Controller: /book', () => {
 
   it('Create', async () => {
     await agent
-      .post('/book/by-author/' + authorId)
+      .post('/book')
       .set('Content-Type', 'application/json')
       .send(book)
       .then(res => {
@@ -72,7 +72,7 @@ describe('CRUD Controller: /book', () => {
     };
 
     await agent
-      .put('/book/by-author/' + authorId + '/' + id)
+      .put('/book/' + id)
       .send(bookUpdate)
       .then(res => {
         expect(res.status).toBe(200);
@@ -86,7 +86,7 @@ describe('CRUD Controller: /book', () => {
 
   it('Delete', async () => {
     await agent
-      .delete('/book/by-author/' + authorId + '/' + id)
+      .delete('/book/' + id)
       .then(res => {
         expect(res.status).toBe(200);
         expect(res.body.id).toBe(id);

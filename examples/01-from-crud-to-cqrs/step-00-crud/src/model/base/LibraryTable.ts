@@ -4,6 +4,7 @@ import { TableManager } from "dynamode";
 
 const TABLE_NAME: string = 'library-system-database';
 const GSI1_INDEX: string = 'entity-type';
+const GSI2_INDEX: string = 'status-type';
 
 export type LibraryTablePrimaryKey = {
   resourceId: string;
@@ -23,10 +24,16 @@ export class LibraryTable extends Entity {
   subResourceId: string;
 
   @attribute.gsi.partitionKey.string({ indexName: GSI1_INDEX })
-  type!: string;
+  type: string;
 
   @attribute.gsi.sortKey.string({ indexName: GSI1_INDEX })
-  subType!: string
+  subType: string;
+
+  @attribute.gsi.partitionKey.string({ indexName: GSI2_INDEX })
+  statusType: string;
+
+  @attribute.gsi.sortKey.string({ indexName: GSI2_INDEX })
+  statusSubType: string
 
   @attribute.date.string()
   createdAt: Date;
@@ -41,11 +48,13 @@ export class LibraryTable extends Entity {
     this.subResourceId = props.subResourceId;
 
     this.type = this.dynamodeEntity;
+    this.statusType = this.dynamodeEntity;
 
     // We could overload the primary sort key for the purpose of the GSI, but ...
     // Dynamode does not support multiple attribute annotations so far.
-    // That's why we will clone `subResourceId` to `subType` in the constructor.
+    // That's why we will clone `subResourceId` to `subType` and `statusSubType` in the constructor.
     this.subType = this.subResourceId;
+    this.statusSubType = this.subResourceId;
 
     this.createdAt = props.createdAt || new Date();
     this.updatedAt = props.updatedAt || new Date();

@@ -1,24 +1,22 @@
 import Router from 'express-promise-router';
 import KSUID from 'ksuid';
-import { NotFoundError } from "dynamode/utils";
 import { Request, Response } from 'express';
+import { extractPaginationDetails } from "./helpers/pagination";
 import { DI } from '../server';
 import { Book } from '../model/Book';
 import { BookMapping } from '../mapping/BookMapping';
+
 
 const router = Router();
 
 // Create.
 
-router.post('/by-author/:authorId', async (req: Request<{ authorId: string }>, res: Response) => {
-  const authorId = req.params.authorId;
+router.post('/', async (req: Request, res: Response) => {
   const payload = req.body;
-
-  BookMapping.validateIdentifiers(authorId);
   const mapping = BookMapping.validateAndConstructFromPayload(payload);
 
-  const bookId = await KSUID.random();
-  const entity = Book.fromMapping(KSUID.parse(authorId), bookId, mapping);
+  const id = await KSUID.random();
+  const entity = Book.fromMapping(id, mapping);
 
   await DI.database.books.put(entity);
 
@@ -28,9 +26,14 @@ router.post('/by-author/:authorId', async (req: Request<{ authorId: string }>, r
 // Read (All).
 
 router.get('/', async (req: Request, res: Response) => {
+  const pagination = extractPaginationDetails(req, Book.getPrimaryKey);
+
   const collection = await DI.database.books.query()
     .partitionKey('type')
     .eq(Book.name)
+    .limit(pagination.pageSize)
+    .sort(pagination.sortOrder)
+    .startAt(pagination.startAtKey)
     .run();
 
   res.json(collection.items.map((entity: Book) => entity.toMapping()));
@@ -39,49 +42,36 @@ router.get('/', async (req: Request, res: Response) => {
 // Read (One).
 
 router.get('/:id', async (req: Request<{ id: string }>, res: Response) => {
-  const bookId = req.params.id;
-  BookMapping.validateIdentifiers(bookId);
+  const id = req.params.id;
+  BookMapping.validateIdentifiers(id);
 
-  const collection = await DI.database.books.query()
-    .partitionKey('type')
-    .eq(Book.name)
-    .sortKey('subType')
-    .eq(bookId)
-    .limit(1)
-    .run();
+  const entity = await DI.database.books.get(Book.getPrimaryKey(id));
 
-  if (collection.items.length === 0) {
-     throw new NotFoundError(`Cannot find a book with given ID: ${bookId}`);
-  }
-
-  res.json(collection.items[0].toMapping());
+  res.json(entity.toMapping());
 });
 
 // Update.
 
-router.put('/by-author/:authorId/:id', async (req: Request<{ authorId: string, id: string }>, res: Response) => {
-  const bookId = req.params.id;
-  const authorId = req.params.authorId;
+router.put('/:id', async (req: Request<{ id: string }>, res: Response) => {
+  const id = req.params.id;
   const payload = req.body;
-  const mapping = BookMapping.validateAndConstructFromPayload({ id: bookId, authorId, ...payload });
+  const mapping = BookMapping.validateAndConstructFromPayload({ id, ...payload });
 
   const entity = Book.fromCompleteMapping(mapping);
-  const primaryKey = Book.getPrimaryKey(mapping.authorId!, mapping.id!);
-  const updatedEntity = await DI.database.books.update(primaryKey, entity.toUpdateStructure());
+  const updatedEntity = await DI.database.books.update(Book.getPrimaryKey(mapping.id!), entity.toUpdateStructure());
 
   res.json(updatedEntity.toMapping());
 });
 
 // Delete.
 
-router.delete('/by-author/:authorId/:id', async (req: Request<{ authorId: string, id: string }>, res: Response) => {
-  const bookId = req.params.id;
-  const authorId = req.params.authorId;
-  BookMapping.validateIdentifiers(authorId, bookId);
+router.delete('/:id', async (req: Request<{ id: string }>, res: Response) => {
+  const id = req.params.id;
+  BookMapping.validateIdentifiers(id);
 
-  await DI.database.books.delete(Book.getPrimaryKey(authorId, bookId));
+  await DI.database.books.delete(Book.getPrimaryKey(id));
 
-  res.json(BookMapping.emptyMapping(bookId));
+  res.json(BookMapping.emptyMapping(id));
 });
 
 export const BookController = router;

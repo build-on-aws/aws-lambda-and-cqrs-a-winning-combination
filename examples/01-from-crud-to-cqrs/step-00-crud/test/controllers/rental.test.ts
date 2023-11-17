@@ -12,7 +12,7 @@ describe('CRUD Controller: /rental', () => {
 
   it('Verifying validation during creation', async () => {
     await agent
-      .post('/rental/for-user/' + user.id + '/' + bookId)
+      .post('/rental')
       .set('Content-Type', 'application/json')
       .send({})
       .then(res => {
@@ -21,10 +21,17 @@ describe('CRUD Controller: /rental', () => {
   });
 
   it('Create', async () => {
+    const rental = {
+      userId: user.id,
+      bookId,
+      name: user.name,
+      email: user.email
+    };
+
     await agent
-      .post('/rental/for-user/' + user.id + '/' + bookId)
+      .post('/rental')
       .set('Content-Type', 'application/json')
-      .send(user)
+      .send(rental)
       .then(res => {
         expect(res.status).toBe(200);
         expect(res.body.userId).toBe(user.id);
@@ -51,9 +58,24 @@ describe('CRUD Controller: /rental', () => {
       });
   });
 
+  it('Read all rentals for a given user', async () => {
+    await agent
+      .get('/rental/' + user.id)
+      .then(res => {
+        expect(res.status).toBe(200);
+        expect(res.body).toHaveLength(1);
+        expect(res.body[0].userId).toBe(user.id);
+        expect(res.body[0].bookId).toBe(bookId);
+        expect(res.body[0].name).toBe(user.name);
+        expect(res.body[0].email).toBe(user.email);
+        expect(res.body[0].status).toBe(RentalStatus.BORROWED);
+        expect(res.body[0].comment).toBe("");
+      });
+  });
+
   it('Read', async () => {
     await agent
-      .get('/rental/for-user/' + user.id + '/' + bookId)
+      .get('/rental/' + user.id + '/' + bookId)
       .then(res => {
         expect(res.status).toBe(200);
         expect(res.body.userId).toBe(user.id);
@@ -67,21 +89,19 @@ describe('CRUD Controller: /rental', () => {
 
   it('Update', async () => {
     const rentalUpdate = {
-      name: 'Jane Doe',
-      email: 'jane@example.com',
       status: 'RETURNED',
       comment: 'This is a comment'
     };
 
     await agent
-      .put('/rental/for-user/' + user.id + '/' + bookId)
+      .put('/rental/' + user.id + '/' + bookId)
       .send(rentalUpdate)
       .then(res => {
         expect(res.status).toBe(200);
         expect(res.body.userId).toBe(user.id);
         expect(res.body.bookId).toBe(bookId);
-        expect(res.body.name).toBe(rentalUpdate.name);
-        expect(res.body.email).toBe(rentalUpdate.email);
+        expect(res.body.name).toBe(user.name);
+        expect(res.body.email).toBe(user.email);
         expect(res.body.status).toBe(RentalStatus.RETURNED);
         expect(res.body.comment).toBe(rentalUpdate.comment);
       });
@@ -89,7 +109,7 @@ describe('CRUD Controller: /rental', () => {
 
   it('Delete', async () => {
     await agent
-      .delete('/rental/for-user/' + user.id + '/' + bookId)
+      .delete('/rental/' + user.id + '/' + bookId)
       .then(res => {
         expect(res.status).toBe(200);
         expect(res.body.userId).toBe(user.id);

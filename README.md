@@ -91,30 +91,37 @@ Application have 3 entities:
 If you have a closer look on the *API*, it is very CRUD-oriented:
 
 ```text
-POST    /author        creates new author
-GET     /author        finds all authors
-GET     /author/:id    finds author by id
-PUT     /author/:id    updates author by id
-DELETE  /author/:id    deletes author by id
+POST    /author                     creates new author
+GET     /author                     finds all authors
+GET     /author/:id                 finds author by id
+PUT     /author/:id                 updates author by id
+DELETE  /author/:id                 deletes author by id
 
-POST    /book          creates new book
-GET     /book          finds all books
-GET     /book/:id      finds book by id
-PUT     /book/:id      updates book by id
-DELETE  /book/:id      deletes book by id
+POST    /book                       creates new book
+GET     /book                       finds all books
+GET     /book/:id                   finds book by id
+PUT     /book/:id                   updates book by id
+DELETE  /book/:id                   deletes book by id
 
-POST    /user          creates new user
-GET     /user          finds all users
-GET     /user/:id      finds user by id
-PUT     /user/:id      updates user by id
-DELETE  /user/:id      deletes user by id
+POST    /rental/:userId/:bookId     creates a new book rental between user and book
+GET     /rental                     finds all rentals
+GET     /rental/:userId             finds all rentals for a given user
+GET     /rental/:userId/:bookId     finds rental by user and book identifiers
+PUT     /rental/:userId/:bookId     updates rental by user and book identifiers
+DELETE  /rental/:userId/:bookId     deletes rental user and book identifiers
+
+POST    /user                       creates new user
+GET     /user                       finds all users
+GET     /user/:id                   finds user by id
+PUT     /user/:id                   updates user by id
+DELETE  /user/:id                   deletes user by id
 ```
 
 ### Phase 1: Refactoring from CRUD to CQRS
 
 In this phase, you want for refactor from a *CRUD-like* architecture and representation to something that will represent domain-specific actions.
 
-As an example, you will need to implement just a subset of all available operations - which are:
+As an example, you will need to implement just a subset of all available operations from the *Book Management* bounded context - which are:
 
 - Queries:
   - `GetBooksByAuthor` by given author identifier.
@@ -142,6 +149,18 @@ As an example, you will need to implement just a subset of all available operati
     - Update the given book status.
     - Block the user that borrowed this position, and add annotation in the status about the ID of the  missing book.
     - Remove current borrower from the book.
+
+Here is how the new API will look like:
+
+```text
+GET     /book/by-author/:authorId               Query  : `GetBooksByAuthor`
+GET     /book/by-user/:userId?status=borrowed   Query  : `GetBorrowedBooksByUser`
+GET     /book?status=missing                    Query  : `GetMissingBooks`
+
+POST    /book/new                               Command: `AddNewBook`
+POST    /book/:bookId/borrow                    Command: `BorrowBook`
+POST    /book/:bookId/missing                   Command: `ReportMissingBook`
+```
 
 #### Why do you want a refactor from CRUD to CQRS?
 

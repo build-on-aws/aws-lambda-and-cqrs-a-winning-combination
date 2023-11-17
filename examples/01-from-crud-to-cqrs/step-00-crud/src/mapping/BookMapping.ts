@@ -4,14 +4,14 @@ import { Book } from '../model/Book';
 
 type BookMappingAllowedFields = {
   id?: string;
-  authorId?: string;
+  authorId: string;
   title: string;
   isbn: string;
   status?: string;
 }
 
 export class BookMapping extends BaseMapping {
-  public readonly authorId?: string;
+  public readonly authorId: string;
   public readonly title: string;
   public readonly isbn: string;
   public readonly status?: string;
@@ -46,7 +46,7 @@ export class BookMapping extends BaseMapping {
   }
 
   static validatePayload(payload: BookMappingAllowedFields) {
-    BaseMapping.validateIdentifiers(payload.authorId, payload.id);
+    BaseMapping.validateIdentifiers(payload.id, payload.authorId);
 
     if (!payload.title) {
       throw new MappingValidationError('For Book, title is a required field that is a non-empty string');

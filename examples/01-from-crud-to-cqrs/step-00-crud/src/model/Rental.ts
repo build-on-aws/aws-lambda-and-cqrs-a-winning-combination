@@ -34,13 +34,15 @@ export class Rental extends LibraryTable implements IMappable, IUpdateable {
   @attribute.string()
   comment: string;
 
-  constructor(props: RentalProps) {
+  constructor(userId: string, props: RentalProps) {
     super(props);
 
     this.name = props.name;
     this.email = props.email;
     this.status = props.status;
     this.comment = props.comment;
+
+    this.subType = userId;
   }
 
   toMapping(): RentalMapping {
@@ -59,23 +61,26 @@ export class Rental extends LibraryTable implements IMappable, IUpdateable {
   }
 
   static fromMapping(userId: KSUID, bookId: KSUID, mapping: RentalMapping): Rental {
-    return new Rental({
-      ...Rental.getPrimaryKey(userId.string, bookId.string),
-      name: mapping.name,
-      email: mapping.email,
-      status: RentalStatus[(mapping.status ?? RentalStatus.BORROWED) as keyof typeof RentalStatus],
-      comment: mapping.comment ?? ""
-    })
+    return new Rental(
+      userId.string,
+      {
+        ...Rental.getPrimaryKey(userId.string, bookId.string),
+        name: mapping.name,
+        email: mapping.email,
+        status: RentalStatus[(mapping.status ?? RentalStatus.BORROWED) as keyof typeof RentalStatus],
+        comment: mapping.comment ?? ""
+      }
+    )
   }
 
   static fromCompleteMapping(mapping: RentalMapping): Rental {
     return Rental.fromMapping(KSUID.parse(mapping.userId!), KSUID.parse(mapping.bookId!), mapping);
   }
 
-  static getPrimaryKey(userId: string, bookId: string): LibraryTablePrimaryKey {
+  static getPrimaryKey(userId: string, bookId?: string): LibraryTablePrimaryKey {
     return {
       resourceId: userId,
-      subResourceId: bookId
+      subResourceId: bookId!
     };
   }
 }
