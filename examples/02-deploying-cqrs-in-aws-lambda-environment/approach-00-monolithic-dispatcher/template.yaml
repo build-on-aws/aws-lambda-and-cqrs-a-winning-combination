@@ -62,8 +62,6 @@ Resources:
           AttributeType: S
         - AttributeName: type
           AttributeType: S
-        - AttributeName: subType
-          AttributeType: S
         # ... and the rest of non-key attributes:
         #
         # - AttributeName: name
@@ -89,7 +87,7 @@ Resources:
           KeySchema:
             - AttributeName: type
               KeyType: HASH
-            - AttributeName: subType
+            - AttributeName: subResourceId
               KeyType: RANGE
           Projection:
             ProjectionType: ALL

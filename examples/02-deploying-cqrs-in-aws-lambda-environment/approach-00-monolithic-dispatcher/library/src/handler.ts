@@ -1,10 +1,10 @@
-import middy from "@middy/core";
+import middy from '@middy/core';
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { injectLambdaContext } from "@aws-lambda-powertools/logger";
-import { logMetrics } from "@aws-lambda-powertools/metrics";
-import { captureLambdaHandler } from "@aws-lambda-powertools/tracer";
+import { injectLambdaContext } from '@aws-lambda-powertools/logger';
+import { logMetrics } from '@aws-lambda-powertools/metrics';
+import { captureLambdaHandler } from '@aws-lambda-powertools/tracer';
 
-import { logger, metrics, tracer } from "./powertools/utilities";
+import { logger, metrics, tracer } from './powertools/utilities';
 
 const plainHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   logger.appendKeys({ resource_path: event.requestContext.resourcePath });

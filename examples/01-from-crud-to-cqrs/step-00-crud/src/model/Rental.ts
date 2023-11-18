@@ -1,91 +1,158 @@
-import attribute from 'dynamode/decorators';
 import KSUID from "ksuid";
-import { LibraryTable, LibraryTablePrimaryKey, LibraryTableProps } from './base/LibraryTable';
-import { User } from "./User";
-import { RentalMapping } from "../mapping/RentalMapping";
-import { IMappable } from "../mapping/interfaces/IMappable";
-import { IUpdateable } from "../mapping/interfaces/IUpdateable";
+import moment from "moment";
+import { MappingValidationError } from "../exceptions/MappingValidationError";
+import { BaseModel, IMapper, PrimaryKey } from "./base";
+import { FieldsToUpdate } from "../database/DatabaseActionsProvider";
 
-type RentalFields = {
-  name: string;
-  email: string;
-  status: RentalStatus;
-  comment: string;
+type RentalPayload = {
+  bookId?: string;
+  userId?: string;
+  status?: string;
+  comment?: string;
+  createdAt?: string;
+  updatedAt?: string;
 };
-
-type RentalProps = LibraryTableProps & RentalFields;
-
-export class Rental extends LibraryTable implements IMappable, IUpdateable {
-  @attribute.partitionKey.string({ prefix: User.name }) // `User#${userId}`
-  resourceId!: string;
-
-  @attribute.sortKey.string({ prefix: Rental.name }) // `Rental#${bookId}`
-  subResourceId!: string;
-
-  @attribute.string()
-  name: string;
-
-  @attribute.string()
-  email: string;
-
-  @attribute.string()
-  status: RentalStatus;
-
-  @attribute.string()
-  comment: string;
-
-  constructor(userId: string, props: RentalProps) {
-    super(props);
-
-    this.name = props.name;
-    this.email = props.email;
-    this.status = props.status;
-    this.comment = props.comment;
-
-    this.subType = userId;
-  }
-
-  toMapping(): RentalMapping {
-    return RentalMapping.fromEntity(this);
-  }
-
-  toUpdateStructure(): { set: RentalFields } {
-    return {
-      set: {
-        name: this.name,
-        email: this.email,
-        status: this.status,
-        comment: this.comment
-      }
-    };
-  }
-
-  static fromMapping(userId: KSUID, bookId: KSUID, mapping: RentalMapping): Rental {
-    return new Rental(
-      userId.string,
-      {
-        ...Rental.getPrimaryKey(userId.string, bookId.string),
-        name: mapping.name,
-        email: mapping.email,
-        status: RentalStatus[(mapping.status ?? RentalStatus.BORROWED) as keyof typeof RentalStatus],
-        comment: mapping.comment ?? ""
-      }
-    )
-  }
-
-  static fromCompleteMapping(mapping: RentalMapping): Rental {
-    return Rental.fromMapping(KSUID.parse(mapping.userId!), KSUID.parse(mapping.bookId!), mapping);
-  }
-
-  static getPrimaryKey(userId: string, bookId?: string): LibraryTablePrimaryKey {
-    return {
-      resourceId: userId,
-      subResourceId: bookId!
-    };
-  }
-}
 
 export enum RentalStatus {
   BORROWED = "BORROWED",
-  RETURNED = "RETURNED"
+  RETURNED = "RETURNED",
+}
+
+export type RentalModel = BaseModel & {
+  status: string;
+  comment: string;
+};
+
+type EmptyRentalMapping = {
+  userId: string;
+  bookId: string;
+};
+
+export class Rental implements IMapper<RentalPayload, RentalModel, EmptyRentalMapping> {
+  private readonly bookId: KSUID;
+  private readonly userId: KSUID;
+  private readonly status: RentalStatus;
+  private readonly comment: string;
+
+  protected constructor(payload: RentalPayload) {
+    this.bookId = payload.bookId ? KSUID.parse(payload.bookId) : KSUID.randomSync();
+    this.userId = payload.userId ? KSUID.parse(payload.userId) : KSUID.randomSync();
+    this.status = RentalStatus[(payload.status ?? RentalStatus.BORROWED) as keyof typeof RentalStatus];
+    this.comment = payload.comment ?? "";
+  }
+
+  static fromPayload(bookId: string, userId: string, payload: RentalPayload) {
+    try {
+      KSUID.parse(bookId);
+    } catch (error: any) {
+      throw new MappingValidationError("The provided book ID must be a valid KSUID");
+    }
+
+    try {
+      KSUID.parse(userId);
+    } catch (error: any) {
+      throw new MappingValidationError("The provided user ID must be a valid KSUID");
+    }
+
+    if (payload.status && payload.status === "") {
+      throw new MappingValidationError("Field `status` should be a non-empty string");
+    }
+
+    return new Rental({
+      userId,
+      bookId,
+      ...payload,
+    });
+  }
+
+  static fromId(bookId: string, userId: string) {
+    try {
+      KSUID.parse(bookId);
+    } catch (error: any) {
+      throw new MappingValidationError("The provided book ID must be a valid KSUID");
+    }
+
+    try {
+      KSUID.parse(userId);
+    } catch (error: any) {
+      throw new MappingValidationError("The provided user ID must be a valid KSUID");
+    }
+
+    return new Rental({
+      bookId,
+      userId,
+    });
+  }
+
+  static fromModel(model: RentalModel) {
+    const bookId = model.resourceId.split("#")[1];
+    const userId = model.subResourceId.split("#")[1];
+
+    try {
+      KSUID.parse(bookId);
+    } catch (error: any) {
+      throw new MappingValidationError("The provided book ID must be a valid KSUID");
+    }
+
+    try {
+      KSUID.parse(userId);
+    } catch (error: any) {
+      throw new MappingValidationError("The provided user ID must be a valid KSUID");
+    }
+
+    return new Rental({
+      bookId,
+      userId,
+      status: model.status,
+      comment: model.comment,
+    });
+  }
+
+  emptyMapping(): EmptyRentalMapping {
+    return {
+      userId: this.userId.string,
+      bookId: this.bookId.string,
+    };
+  }
+
+  toKey(): PrimaryKey {
+    return {
+      resourceId: `Book#${this.bookId.string}`,
+      subResourceId: `User#${this.userId.string}`,
+    };
+  }
+
+  toModel() {
+    return {
+      ...this.toKey(),
+      type: Rental.name,
+      status: this.status,
+      comment: this.comment,
+      createdAt: moment().toISOString(),
+      updatedAt: moment().toISOString(),
+    };
+  }
+
+  toMapping(): RentalPayload {
+    return {
+      bookId: this.bookId.string,
+      userId: this.userId.string,
+      status: this.status,
+      comment: this.comment,
+    };
+  }
+
+  toUpdate(): FieldsToUpdate {
+    const fields = [];
+
+    if (this.status) {
+      fields.push({ name: "status", value: this.status });
+    }
+
+    if (this.comment) {
+      fields.push({ name: "comment", value: this.comment });
+    }
+
+    return fields;
+  }
 }

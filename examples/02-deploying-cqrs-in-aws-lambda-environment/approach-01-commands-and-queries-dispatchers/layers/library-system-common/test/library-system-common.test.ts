@@ -1,5 +1,5 @@
 import { expect } from '@jest/globals';
-import { responseBuilder } from "../index";
+import { responseBuilder } from '../index';
 
 describe('Unit test for library-system-common layer', function () {
   it('verifies response builder', async () => {

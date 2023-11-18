@@ -1,87 +1,171 @@
-import attribute from 'dynamode/decorators';
-import KSUID from 'ksuid';
-import { LibraryTable, LibraryTablePrimaryKey, LibraryTableProps } from './base/LibraryTable';
-import { UserMapping } from '../mapping/UserMapping';
-import { IMappable } from '../mapping/interfaces/IMappable';
-import { IUpdateable } from '../mapping/interfaces/IUpdateable';
+import KSUID from "ksuid";
+import moment from "moment";
+import { MappingValidationError } from "../exceptions/MappingValidationError";
+import { BaseModel, EmptyMapping, IMapper, PrimaryKey } from "./base";
+import { FieldsToUpdate } from "../database/DatabaseActionsProvider";
 
-type UserFields = {
+type UserPayload = {
+  id?: string;
   name: string;
   email: string;
-  status: UserStatus;
+  status?: string;
+  comment?: string;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export enum UserStatus {
+  NOT_VERIFIED = "NOT_VERIFIED",
+  VERIFIED = "VERIFIED",
+  SUSPENDED = "SUSPENDED",
+}
+
+export type UserModel = BaseModel & {
+  name: string;
+  email: string;
+  status: string;
   comment: string;
 };
 
-type UserProps = LibraryTableProps & UserFields;
+export class User implements IMapper<UserPayload, UserModel> {
+  private readonly id: KSUID;
+  private readonly name: string;
+  private readonly email: string;
+  private readonly status: UserStatus;
+  private readonly comment: string;
 
-export class User extends LibraryTable implements IMappable, IUpdateable {
-  @attribute.partitionKey.string({ prefix: User.name }) // `User#${userId}`
-  resourceId!: string;
-
-  @attribute.sortKey.string({ prefix: User.name }) // `User#${userId}`
-  subResourceId!: string;
-
-  @attribute.string()
-  name: string;
-
-  @attribute.string()
-  email: string;
-
-  @attribute.string()
-  status: UserStatus;
-
-  @attribute.string()
-  comment: string;
-
-  constructor(props: UserProps) {
-    super(props);
-
-    this.name = props.name;
-    this.email = props.email;
-    this.status = props.status;
-    this.comment = props.comment;
+  protected constructor(payload: UserPayload) {
+    this.id = payload.id ? KSUID.parse(payload.id) : KSUID.randomSync();
+    this.name = payload.name;
+    this.email = payload.email;
+    this.status = UserStatus[(payload.status ?? UserStatus.NOT_VERIFIED) as keyof typeof UserStatus];
+    this.comment = payload.comment ?? "";
   }
 
-  toMapping(): UserMapping {
-    return UserMapping.fromEntity(this);
+  static fromPayload(payload: UserPayload) {
+    if (!payload.name) {
+      throw new MappingValidationError("Field `name` is required and should be a non-empty string");
+    }
+
+    if (!payload.email) {
+      throw new MappingValidationError("Field `email` is required and should be a non-empty string");
+    }
+
+    return new User(payload);
   }
 
-  toUpdateStructure(): { set: UserFields } {
-    return {
-      set: {
-        name: this.name,
-        email: this.email,
-        status: this.status,
-        comment: this.comment
-      }
-    };
-  }
+  static fromPayloadForUpdate(id: string, payload: UserPayload) {
+    try {
+      KSUID.parse(id);
+    } catch (error: any) {
+      throw new MappingValidationError("The provided ID must be a valid KSUID");
+    }
 
-  static fromMapping(id: KSUID, mapping: UserMapping): User {
+    if (payload.name && payload.name === "") {
+      throw new MappingValidationError("Field `name` should be a non-empty string");
+    }
+
+    if (payload.email && payload.email === "") {
+      throw new MappingValidationError("Field `email` should be a non-empty string");
+    }
+
+    if (payload.status && payload.status === "") {
+      throw new MappingValidationError("Field `status` should be a non-empty string");
+    }
+
     return new User({
-      ...User.getPrimaryKey(id.string),
-      name: mapping.name,
-      email: mapping.email,
-      status: UserStatus[(mapping.status ?? UserStatus.NOT_VERIFIED) as keyof typeof UserStatus],
-      comment: mapping.comment ?? ''
-    })
+      id,
+      ...payload,
+    });
   }
 
-  static fromCompleteMapping(mapping: UserMapping): User {
-    return User.fromMapping(KSUID.parse(mapping.id!), mapping);
+  static fromId(id: string) {
+    try {
+      KSUID.parse(id);
+    } catch (error: any) {
+      throw new MappingValidationError("The provided ID must be a valid KSUID");
+    }
+
+    return new User({
+      id,
+      name: "",
+      email: "",
+    });
   }
 
-  static getPrimaryKey(userId: string): LibraryTablePrimaryKey {
+  static fromModel(model: UserModel) {
+    const id = model.resourceId.split("#")[1];
+
+    try {
+      KSUID.parse(id);
+    } catch (error: any) {
+      throw new MappingValidationError("The provided ID must be a valid KSUID");
+    }
+
+    return new User({
+      id,
+      name: model.name,
+      email: model.email,
+      status: model.status,
+      comment: model.comment,
+    });
+  }
+
+  emptyMapping(): EmptyMapping {
     return {
-      resourceId: userId,
-      subResourceId: userId
+      id: this.id.string,
     };
   }
-}
 
-export enum UserStatus {
-  NOT_VERIFIED = 'NOT_VERIFIED',
-  VERIFIED = 'VERIFIED',
-  SUSPENDED = 'SUSPENDED'
-}
+  toKey(): PrimaryKey {
+    return {
+      resourceId: `User#${this.id.string}`,
+      subResourceId: `User#${this.id.string}`,
+    };
+  }
 
+  toModel() {
+    return {
+      ...this.toKey(),
+      type: User.name,
+      name: this.name,
+      email: this.email,
+      status: this.status,
+      comment: this.comment,
+      createdAt: moment().toISOString(),
+      updatedAt: moment().toISOString(),
+    };
+  }
+
+  toMapping(): UserPayload {
+    return {
+      id: this.id.string,
+      name: this.name,
+      email: this.email,
+      status: this.status,
+      comment: this.comment,
+    };
+  }
+
+  toUpdate(): FieldsToUpdate {
+    const fields = [];
+
+    if (this.name) {
+      fields.push({ name: "name", value: this.name });
+    }
+
+    if (this.email) {
+      fields.push({ name: "email", value: this.email });
+    }
+
+    if (this.status) {
+      fields.push({ name: "status", value: this.status });
+    }
+
+    if (this.comment) {
+      fields.push({ name: "comment", value: this.comment });
+    }
+
+    return fields;
+  }
+}

@@ -1,7 +1,7 @@
 import { RentalStatus } from "../../src/model/Rental";
-import { getAgent, getFakeBookId, getFakeUserWithId, start, stop } from '../helpers/common';
+import { getAgent, getFakeBookId, getFakeUserWithId, start, stop } from "../helpers/common";
 
-describe('CRUD Controller: /rental', () => {
+describe("CRUD Controller: /rental", () => {
   beforeAll(start);
   afterAll(stop);
 
@@ -10,119 +10,82 @@ describe('CRUD Controller: /rental', () => {
   const user = getFakeUserWithId();
   const bookId = getFakeBookId();
 
-  it('Verifying validation during creation', async () => {
+  it("Create", async () => {
     await agent
-      .post('/rental')
-      .set('Content-Type', 'application/json')
+      .post(`/rental/${user.id}/${bookId}`)
+      .set("Content-Type", "application/json")
       .send({})
-      .then(res => {
-        expect(res.status).toBe(400);
-      });
-  });
-
-  it('Create', async () => {
-    const rental = {
-      userId: user.id,
-      bookId,
-      name: user.name,
-      email: user.email
-    };
-
-    await agent
-      .post('/rental')
-      .set('Content-Type', 'application/json')
-      .send(rental)
-      .then(res => {
+      .then((res) => {
         expect(res.status).toBe(200);
         expect(res.body.userId).toBe(user.id);
         expect(res.body.bookId).toBe(bookId);
-        expect(res.body.name).toBe(user.name);
-        expect(res.body.email).toBe(user.email);
         expect(res.body.status).toBe(RentalStatus.BORROWED);
         expect(res.body.comment).toBe("");
       });
   });
 
-  it('Read all', async () => {
-    await agent
-      .get('/rental')
-      .then(res => {
-        expect(res.status).toBe(200);
-        expect(res.body).toHaveLength(1);
-        expect(res.body[0].userId).toBe(user.id);
-        expect(res.body[0].bookId).toBe(bookId);
-        expect(res.body[0].name).toBe(user.name);
-        expect(res.body[0].email).toBe(user.email);
-        expect(res.body[0].status).toBe(RentalStatus.BORROWED);
-        expect(res.body[0].comment).toBe("");
-      });
+  it("Read all", async () => {
+    await agent.get("/rental").then((res) => {
+      expect(res.status).toBe(200);
+      expect(res.body).toHaveLength(1);
+      expect(res.body[0].userId).toBe(user.id);
+      expect(res.body[0].bookId).toBe(bookId);
+      expect(res.body[0].status).toBe(RentalStatus.BORROWED);
+      expect(res.body[0].comment).toBe("");
+    });
   });
 
-  it('Read all rentals for a given user', async () => {
-    await agent
-      .get('/rental/' + user.id)
-      .then(res => {
-        expect(res.status).toBe(200);
-        expect(res.body).toHaveLength(1);
-        expect(res.body[0].userId).toBe(user.id);
-        expect(res.body[0].bookId).toBe(bookId);
-        expect(res.body[0].name).toBe(user.name);
-        expect(res.body[0].email).toBe(user.email);
-        expect(res.body[0].status).toBe(RentalStatus.BORROWED);
-        expect(res.body[0].comment).toBe("");
-      });
+  it("Read all rentals for a given user", async () => {
+    await agent.get(`/rental/${user.id}`).then((res) => {
+      expect(res.status).toBe(200);
+      expect(res.body).toHaveLength(1);
+      expect(res.body[0].userId).toBe(user.id);
+      expect(res.body[0].bookId).toBe(bookId);
+      expect(res.body[0].status).toBe(RentalStatus.BORROWED);
+      expect(res.body[0].comment).toBe("");
+    });
   });
 
-  it('Read', async () => {
-    await agent
-      .get('/rental/' + user.id + '/' + bookId)
-      .then(res => {
-        expect(res.status).toBe(200);
-        expect(res.body.userId).toBe(user.id);
-        expect(res.body.bookId).toBe(bookId);
-        expect(res.body.name).toBe(user.name);
-        expect(res.body.email).toBe(user.email);
-        expect(res.body.status).toBe(RentalStatus.BORROWED);
-        expect(res.body.comment).toBe("");
-      });
+  it("Read", async () => {
+    await agent.get(`/rental/${user.id}/${bookId}`).then((res) => {
+      expect(res.status).toBe(200);
+      expect(res.body.userId).toBe(user.id);
+      expect(res.body.bookId).toBe(bookId);
+      expect(res.body.status).toBe(RentalStatus.BORROWED);
+      expect(res.body.comment).toBe("");
+    });
   });
 
-  it('Update', async () => {
+  it("Update", async () => {
     const rentalUpdate = {
-      status: 'RETURNED',
-      comment: 'This is a comment'
+      status: "RETURNED",
+      comment: "This is a comment",
     };
 
     await agent
-      .put('/rental/' + user.id + '/' + bookId)
+      .put(`/rental/${user.id}/${bookId}`)
       .send(rentalUpdate)
-      .then(res => {
+      .then((res) => {
         expect(res.status).toBe(200);
         expect(res.body.userId).toBe(user.id);
         expect(res.body.bookId).toBe(bookId);
-        expect(res.body.name).toBe(user.name);
-        expect(res.body.email).toBe(user.email);
         expect(res.body.status).toBe(RentalStatus.RETURNED);
         expect(res.body.comment).toBe(rentalUpdate.comment);
       });
   });
 
-  it('Delete', async () => {
-    await agent
-      .delete('/rental/' + user.id + '/' + bookId)
-      .then(res => {
-        expect(res.status).toBe(200);
-        expect(res.body.userId).toBe(user.id);
-        expect(res.body.bookId).toBe(bookId);
-      });
+  it("Delete", async () => {
+    await agent.delete(`/rental/${user.id}/${bookId}`).then((res) => {
+      expect(res.status).toBe(200);
+      expect(res.body.userId).toBe(user.id);
+      expect(res.body.bookId).toBe(bookId);
+    });
   });
 
-  it('Read all, but this time empty collection', async () => {
-    await agent
-      .get('/rental')
-      .then(res => {
-        expect(res.status).toBe(200);
-        expect(res.body).toHaveLength(0);
-      });
+  it("Read all, but this time empty collection", async () => {
+    await agent.get("/rental").then((res) => {
+      expect(res.status).toBe(200);
+      expect(res.body).toHaveLength(0);
+    });
   });
 });

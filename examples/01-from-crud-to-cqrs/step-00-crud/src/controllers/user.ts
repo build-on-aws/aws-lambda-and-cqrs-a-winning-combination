@@ -1,76 +1,82 @@
-import Router from 'express-promise-router';
-import KSUID from 'ksuid';
-import { Request, Response } from 'express';
-import { extractPaginationDetails } from "./helpers/pagination";
-import { DI } from '../server';
-import { User } from '../model/User';
-import { UserMapping } from '../mapping/UserMapping';
+import Router from "express-promise-router";
+import { Request, Response } from "express";
+import { extractPaginationDetails } from "../common/controllers";
+import { NotFoundError } from "../exceptions/NotFoundError";
+import { DI } from "../server";
+import { User, UserModel } from "../model/User";
+import { ByType } from "../database/DatabaseActionsProvider";
 
 const router = Router();
 
 // Create.
 
-router.post('/', async (req: Request, res: Response) => {
+router.post("/", async (req: Request, res: Response) => {
   const payload = req.body;
-  const mapping = UserMapping.validateAndConstructFromPayload(payload);
+  const mapper = User.fromPayload(payload);
 
-  const id = await KSUID.random();
-  const entity = User.fromMapping(id, mapping);
+  const result = await DI.database.actions.put(mapper.toModel());
 
-  await DI.database.users.put(entity);
-
-  res.json(entity.toMapping());
+  res.json(User.fromModel(result as UserModel).toMapping());
 });
 
 // Read (All).
 
-router.get('/', async (req: Request, res: Response) => {
-  const pagination = extractPaginationDetails(req, User.getPrimaryKey);
+router.get("/", async (req: Request, res: Response) => {
+  const pagination = extractPaginationDetails(req);
 
-  const collection = await DI.database.users.query()
-    .partitionKey('type')
-    .eq(User.name)
-    .limit(pagination.pageSize)
-    .sort(pagination.sortOrder)
-    .startAt(pagination.startAtKey)
-    .run();
+  const collection = await DI.database.actions.queryWithIndex(ByType("User"), pagination);
 
-  res.json(collection.items.map((entity: User) => entity.toMapping()));
+  if (!collection) {
+    throw new NotFoundError("User");
+  }
+
+  res.json(collection.map((entity) => User.fromModel(entity as UserModel).toMapping()));
 });
 
 // Read (One).
 
-router.get('/:id', async (req: Request<{ id: string }>, res: Response) => {
+router.get("/:id", async (req: Request<{ id: string }>, res: Response) => {
   const id = req.params.id;
-  UserMapping.validateIdentifiers(id);
+  const mapper = User.fromId(id);
 
-  const entity = await DI.database.users.get(User.getPrimaryKey(id));
+  const result = await DI.database.actions.get(mapper.toKey());
 
-  res.json(entity.toMapping());
+  if (!result) {
+    throw new NotFoundError("User");
+  }
+
+  res.json(User.fromModel(result as UserModel).toMapping());
 });
 
 // Update.
 
-router.put('/:id', async (req: Request<{ id: string }>, res: Response) => {
+router.put("/:id", async (req: Request<{ id: string }>, res: Response) => {
   const id = req.params.id;
   const payload = req.body;
-  const mapping = UserMapping.validateAndConstructFromPayload({ id, ...payload });
+  const mapper = User.fromPayloadForUpdate(id, payload);
 
-  const entity = User.fromCompleteMapping(mapping);
-  const updatedEntity = await DI.database.users.update(User.getPrimaryKey(mapping.id!), entity.toUpdateStructure());
+  const result = await DI.database.actions.update(mapper.toKey(), mapper.toUpdate());
 
-  res.json(updatedEntity.toMapping());
+  if (!result) {
+    throw new NotFoundError("User");
+  }
+
+  res.json(User.fromModel(result as UserModel).toMapping());
 });
 
 // Delete.
 
-router.delete('/:id', async (req: Request<{ id: string }>, res: Response) => {
+router.delete("/:id", async (req: Request<{ id: string }>, res: Response) => {
   const id = req.params.id;
-  UserMapping.validateIdentifiers(id);
+  const mapper = User.fromId(id);
 
-  await DI.database.users.delete(User.getPrimaryKey(id));
+  const result = await DI.database.actions.delete(mapper.toKey());
 
-  res.json(UserMapping.emptyMapping(id));
+  if (!result) {
+    throw new NotFoundError("User");
+  }
+
+  res.json(mapper.emptyMapping());
 });
 
 export const UserController = router;

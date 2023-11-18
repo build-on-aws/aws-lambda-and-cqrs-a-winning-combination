@@ -1,77 +1,104 @@
-import Router from 'express-promise-router';
-import KSUID from 'ksuid';
-import { Request, Response } from 'express';
-import { extractPaginationDetails } from "./helpers/pagination";
-import { DI } from '../server';
-import { Book } from '../model/Book';
-import { BookMapping } from '../mapping/BookMapping';
-
+import Router from "express-promise-router";
+import { Request, Response } from "express";
+import { extractPaginationDetails } from "../common/controllers";
+import { NotFoundError } from "../exceptions/NotFoundError";
+import { DI } from "../server";
+import { Book, BookModel } from "../model/Book";
+import { ByType, ByTypeAndSortKey } from "../database/DatabaseActionsProvider";
 
 const router = Router();
 
 // Create.
 
-router.post('/', async (req: Request, res: Response) => {
+router.post("/:authorId", async (req: Request<{ authorId: string }>, res: Response) => {
+  const authorId = req.params.authorId;
   const payload = req.body;
-  const mapping = BookMapping.validateAndConstructFromPayload(payload);
+  const mapper = Book.fromPayload(authorId, payload);
 
-  const id = await KSUID.random();
-  const entity = Book.fromMapping(id, mapping);
+  const result = await DI.database.actions.put(mapper.toModel());
 
-  await DI.database.books.put(entity);
-
-  res.json(entity.toMapping());
+  res.json(Book.fromModel(result as BookModel).toMapping());
 });
 
 // Read (All).
 
-router.get('/', async (req: Request, res: Response) => {
-  const pagination = extractPaginationDetails(req, Book.getPrimaryKey);
+router.get("/", async (req: Request, res: Response) => {
+  const pagination = extractPaginationDetails(req);
 
-  const collection = await DI.database.books.query()
-    .partitionKey('type')
-    .eq(Book.name)
-    .limit(pagination.pageSize)
-    .sort(pagination.sortOrder)
-    .startAt(pagination.startAtKey)
-    .run();
+  const collection = await DI.database.actions.queryWithIndex(ByType("Book"), pagination);
 
-  res.json(collection.items.map((entity: Book) => entity.toMapping()));
+  if (!collection) {
+    throw new NotFoundError("Book");
+  }
+
+  res.json(collection.map((entity) => Book.fromModel(entity as BookModel).toMapping()));
+});
+
+// Read (All Books for Author).
+
+router.get("/:authorId", async (req: Request<{ authorId: string }>, res: Response) => {
+  const authorId = req.params.authorId;
+  const pagination = extractPaginationDetails(req);
+
+  const collection = await DI.database.actions.queryWithIndex(
+    ByTypeAndSortKey("Book", `Author#${authorId}`),
+    pagination,
+  );
+
+  if (!collection) {
+    throw new NotFoundError("Book");
+  }
+
+  res.json(collection.map((entity) => Book.fromModel(entity as BookModel).toMapping()));
 });
 
 // Read (One).
 
-router.get('/:id', async (req: Request<{ id: string }>, res: Response) => {
-  const id = req.params.id;
-  BookMapping.validateIdentifiers(id);
+router.get("/:authorId/:bookId", async (req: Request<{ authorId: string; bookId: string }>, res: Response) => {
+  const authorId = req.params.authorId;
+  const bookId = req.params.bookId;
+  const mapper = Book.fromId(bookId, authorId);
 
-  const entity = await DI.database.books.get(Book.getPrimaryKey(id));
+  const result = await DI.database.actions.get(mapper.toKey());
 
-  res.json(entity.toMapping());
+  if (!result) {
+    throw new NotFoundError("Book");
+  }
+
+  res.json(Book.fromModel(result as BookModel).toMapping());
 });
 
 // Update.
 
-router.put('/:id', async (req: Request<{ id: string }>, res: Response) => {
-  const id = req.params.id;
+router.put("/:authorId/:bookId", async (req: Request<{ authorId: string; bookId: string }>, res: Response) => {
+  const authorId = req.params.authorId;
+  const bookId = req.params.bookId;
   const payload = req.body;
-  const mapping = BookMapping.validateAndConstructFromPayload({ id, ...payload });
+  const mapper = Book.fromPayloadForUpdate(bookId, authorId, payload);
 
-  const entity = Book.fromCompleteMapping(mapping);
-  const updatedEntity = await DI.database.books.update(Book.getPrimaryKey(mapping.id!), entity.toUpdateStructure());
+  const result = await DI.database.actions.update(mapper.toKey(), mapper.toUpdate());
 
-  res.json(updatedEntity.toMapping());
+  if (!result) {
+    throw new NotFoundError("Book");
+  }
+
+  res.json(Book.fromModel(result as BookModel).toMapping());
 });
 
 // Delete.
 
-router.delete('/:id', async (req: Request<{ id: string }>, res: Response) => {
-  const id = req.params.id;
-  BookMapping.validateIdentifiers(id);
+router.delete("/:authorId/:bookId", async (req: Request<{ authorId: string; bookId: string }>, res: Response) => {
+  const authorId = req.params.authorId;
+  const bookId = req.params.bookId;
+  const mapper = Book.fromId(bookId, authorId);
 
-  await DI.database.books.delete(Book.getPrimaryKey(id));
+  const result = await DI.database.actions.delete(mapper.toKey());
 
-  res.json(BookMapping.emptyMapping(id));
+  if (!result) {
+    throw new NotFoundError("Book");
+  }
+
+  res.json(mapper.emptyMapping());
 });
 
 export const BookController = router;

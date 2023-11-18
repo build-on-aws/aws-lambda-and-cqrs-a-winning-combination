@@ -1,4 +1,4 @@
-import { DatabaseProvider } from "./providers/DatabaseProvider";
+import { DatabaseProvider } from "./database/DatabaseProvider";
 
 const providedTableName = process.env.DYNAMODB_TABLE_NAME || null;
 const command = process.argv[2] || "";
@@ -8,36 +8,36 @@ let exitCode = 0;
 (async () => {
   const database = new DatabaseProvider(providedTableName, console);
 
-  switch(command) {
-    case 'destroy-database':
-      console.info('⏳  DESTROYING database environment ...');
+  switch (command) {
+    case "destroy-database":
+      console.info("⏳  DESTROYING database environment ...");
 
       try {
         await database.destroyEnvironment();
       } catch (error: any) {
-        if (error.name !== 'ResourceNotFoundException') {
+        if (error.name !== "ResourceNotFoundException") {
           throw error;
         } else {
-          console.info('🟠 Database environment was already destroyed.');
+          console.info("🟠 Database environment was already destroyed.");
         }
       } finally {
-        console.info('🔴 Operation completed.');
+        console.info("🔴 Operation completed.");
       }
       break;
 
-    case 'create-database':
-      console.info('⏳  CREATING database environment ...');
+    case "create-database":
+      console.info("⏳  CREATING database environment ...");
 
       try {
         await database.createEnvironment();
       } catch (error: any) {
-        if (error.name !== 'ResourceInUseException') {
+        if (error.name !== "ResourceInUseException") {
           throw error;
         } else {
-          console.info('🟠 Database environment was already created.');
+          console.info("🟠 Database environment was already created.");
         }
       } finally {
-        console.info('🟢 Operation completed.');
+        console.info("🟢 Operation completed.");
       }
       break;
 
@@ -47,5 +47,5 @@ let exitCode = 0;
       break;
   }
 
-  process.exit(exitCode)
+  process.exit(exitCode);
 })();

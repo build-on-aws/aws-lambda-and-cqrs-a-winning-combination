@@ -1,76 +1,82 @@
-import Router from 'express-promise-router';
-import KSUID from 'ksuid';
-import { Request, Response } from 'express';
-import { extractPaginationDetails } from "./helpers/pagination";
-import { DI } from '../server';
-import { Author } from '../model/Author';
-import { AuthorMapping } from '../mapping/AuthorMapping';
+import Router from "express-promise-router";
+import { Request, Response } from "express";
+import { extractPaginationDetails } from "../common/controllers";
+import { NotFoundError } from "../exceptions/NotFoundError";
+import { DI } from "../server";
+import { Author, AuthorModel } from "../model/Author";
+import { ByType } from "../database/DatabaseActionsProvider";
 
 const router = Router();
 
 // Create.
 
-router.post('/', async (req: Request, res: Response) => {
+router.post("/", async (req: Request, res: Response) => {
   const payload = req.body;
-  const mapping = AuthorMapping.validateAndConstructFromPayload(payload);
+  const mapper = Author.fromPayload(payload);
 
-  const id = await KSUID.random();
-  const entity = Author.fromMapping(id, mapping);
+  const result = await DI.database.actions.put(mapper.toModel());
 
-  await DI.database.authors.put(entity);
-
-  res.json(entity.toMapping());
+  res.json(Author.fromModel(result as AuthorModel).toMapping());
 });
 
 // Read (All).
 
-router.get('/', async (req: Request, res: Response) => {
-  const pagination = extractPaginationDetails(req, Author.getPrimaryKey);
+router.get("/", async (req: Request, res: Response) => {
+  const pagination = extractPaginationDetails(req);
 
-  const collection = await DI.database.authors.query()
-    .partitionKey('type')
-    .eq(Author.name)
-    .limit(pagination.pageSize)
-    .sort(pagination.sortOrder)
-    .startAt(pagination.startAtKey)
-    .run();
+  const collection = await DI.database.actions.queryWithIndex(ByType("Author"), pagination);
 
-  res.json(collection.items.map((entity: Author) => entity.toMapping()));
+  if (!collection) {
+    throw new NotFoundError("Author");
+  }
+
+  res.json(collection.map((entity) => Author.fromModel(entity as AuthorModel).toMapping()));
 });
 
 // Read (One).
 
-router.get('/:id', async (req: Request<{ id: string }>, res: Response) => {
+router.get("/:id", async (req: Request<{ id: string }>, res: Response) => {
   const id = req.params.id;
-  AuthorMapping.validateIdentifiers(id);
+  const mapper = Author.fromId(id);
 
-  const entity = await DI.database.authors.get(Author.getPrimaryKey(id));
+  const result = await DI.database.actions.get(mapper.toKey());
 
-  res.json(entity.toMapping());
+  if (!result) {
+    throw new NotFoundError("Author");
+  }
+
+  res.json(Author.fromModel(result as AuthorModel).toMapping());
 });
 
 // Update.
 
-router.put('/:id', async (req: Request<{ id: string }>, res: Response) => {
+router.put("/:id", async (req: Request<{ id: string }>, res: Response) => {
   const id = req.params.id;
   const payload = req.body;
-  const mapping = AuthorMapping.validateAndConstructFromPayload({ id, ...payload });
+  const mapper = Author.fromPayloadForUpdate(id, payload);
 
-  const entity = Author.fromCompleteMapping(mapping);
-  const updatedEntity = await DI.database.authors.update(Author.getPrimaryKey(mapping.id!), entity.toUpdateStructure());
+  const result = await DI.database.actions.update(mapper.toKey(), mapper.toUpdate());
 
-  res.json(updatedEntity.toMapping());
+  if (!result) {
+    throw new NotFoundError("Author");
+  }
+
+  res.json(Author.fromModel(result as AuthorModel).toMapping());
 });
 
 // Delete.
 
-router.delete('/:id', async (req: Request<{ id: string }>, res: Response) => {
+router.delete("/:id", async (req: Request<{ id: string }>, res: Response) => {
   const id = req.params.id;
-  AuthorMapping.validateIdentifiers(id);
+  const mapper = Author.fromId(id);
 
-  await DI.database.authors.delete(Author.getPrimaryKey(id));
+  const result = await DI.database.actions.delete(mapper.toKey());
 
-  res.json(AuthorMapping.emptyMapping(id));
+  if (!result) {
+    throw new NotFoundError("Author");
+  }
+
+  res.json(mapper.emptyMapping());
 });
 
 export const AuthorController = router;

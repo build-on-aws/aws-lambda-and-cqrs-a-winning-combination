@@ -1,104 +1,103 @@
-import Router from 'express-promise-router';
-import KSUID from 'ksuid';
-import { Request, Response } from 'express';
-import { extractPaginationDetails } from "./helpers/pagination";
-import { DI } from '../server';
-import { Rental } from '../model/Rental';
-import { RentalMapping } from '../mapping/RentalMapping';
+import Router from "express-promise-router";
+import { Request, Response } from "express";
+import { extractPaginationDetails } from "../common/controllers";
+import { NotFoundError } from "../exceptions/NotFoundError";
+import { DI } from "../server";
+import { Rental, RentalModel } from "../model/Rental";
+import { ByType, ByTypeAndSortKey } from "../database/DatabaseActionsProvider";
 
 const router = Router();
 
 // Create.
 
-router.post('/:userId/:bookId', async (req: Request, res: Response) => {
-  const id = req.params.id;
+router.post("/:userId/:bookId", async (req: Request<{ userId: string; bookId: string }>, res: Response) => {
+  const userId = req.params.userId;
   const bookId = req.params.bookId;
   const payload = req.body;
 
-  RentalMapping.validateIdentifiers(id, bookId);
-  const mapping = RentalMapping.validateAndConstructFromPayload(payload);
+  const mapper = Rental.fromPayload(bookId, userId, payload);
 
-  const entity = Rental.fromMapping(KSUID.parse(id), KSUID.parse(bookId), mapping);
+  const result = await DI.database.actions.put(mapper.toModel());
 
-  await DI.database.rentals.put(entity);
-
-  res.json(entity.toMapping());
+  res.json(Rental.fromModel(result as RentalModel).toMapping());
 });
 
 // Read (All).
 
-router.get('/', async (req: Request, res: Response) => {
-  const pagination = extractPaginationDetails(req, Rental.getPrimaryKey);
+router.get("/", async (req: Request, res: Response) => {
+  const pagination = extractPaginationDetails(req);
 
-  const collection = await DI.database.rentals.query()
-    .partitionKey('type')
-    .eq(Rental.name)
-    .limit(pagination.pageSize)
-    .sort(pagination.sortOrder)
-    .startAt(pagination.startAtKey)
-    .run();
+  const collection = await DI.database.actions.queryWithIndex(ByType("Rental"), pagination);
 
-  res.json(collection.items.map((entity: Rental) => entity.toMapping()));
+  if (!collection) {
+    throw new NotFoundError("Rental");
+  }
+
+  res.json(collection.map((entity) => Rental.fromModel(entity as RentalModel).toMapping()));
 });
 
 // Read (All Rentals for User).
 
-router.get('/:userId', async (req: Request<{ userId: string }>, res: Response) => {
+router.get("/:userId", async (req: Request<{ userId: string }>, res: Response) => {
   const userId = req.params.userId;
+  const pagination = extractPaginationDetails(req);
 
-  const pagination = extractPaginationDetails(req, Rental.getPrimaryKey);
+  const collection = await DI.database.actions.queryWithIndex(ByTypeAndSortKey("Rental", `User#${userId}`), pagination);
 
-  const collection = await DI.database.rentals.query()
-    .partitionKey('status')
-    .eq(Rental.name)
-    .sortKey('subStatus')
-    .eq(userId)
-    .limit(pagination.pageSize)
-    .sort(pagination.sortOrder)
-    .startAt(pagination.startAtKey)
-    .run();
+  if (!collection) {
+    throw new NotFoundError("Rental");
+  }
 
-  res.json(collection.items.map((entity: Rental) => entity.toMapping()));
+  res.json(collection.map((entity) => Rental.fromModel(entity as RentalModel).toMapping()));
 });
-
 
 // Read (One).
 
-router.get('/:userId/:bookId', async (req: Request<{ userId: string, bookId: string }>, res: Response) => {
+router.get("/:userId/:bookId", async (req: Request<{ userId: string; bookId: string }>, res: Response) => {
   const userId = req.params.userId;
   const bookId = req.params.bookId;
-  RentalMapping.validateIdentifiers(userId, bookId);
+  const mapper = Rental.fromId(bookId, userId);
 
-  const entity = await DI.database.rentals.get(Rental.getPrimaryKey(userId, bookId));
+  const result = await DI.database.actions.get(mapper.toKey());
 
-  res.json(entity.toMapping());
+  if (!result) {
+    throw new NotFoundError("Rental");
+  }
+
+  res.json(Rental.fromModel(result as RentalModel).toMapping());
 });
 
 // Update.
 
-router.put('/:userId/:bookId', async (req: Request<{ userId: string, bookId: string }>, res: Response) => {
+router.put("/:userId/:bookId", async (req: Request<{ userId: string; bookId: string }>, res: Response) => {
   const userId = req.params.userId;
   const bookId = req.params.bookId;
   const payload = req.body;
-  const mapping = RentalMapping.validateAndConstructFromPayload({ userId, bookId, ...payload });
+  const mapper = Rental.fromPayload(bookId, userId, payload);
 
-  const entity = Rental.fromCompleteMapping(mapping);
-  const primaryKey = Rental.getPrimaryKey(mapping.userId!, mapping.bookId!);
-  const updatedEntity = await DI.database.rentals.update(primaryKey, entity.toUpdateStructure());
+  const result = await DI.database.actions.update(mapper.toKey(), mapper.toUpdate());
 
-  res.json(updatedEntity.toMapping());
+  if (!result) {
+    throw new NotFoundError("Rental");
+  }
+
+  res.json(Rental.fromModel(result as RentalModel).toMapping());
 });
 
 // Delete.
 
-router.delete('/:userId/:bookId', async (req: Request<{ userId: string, bookId: string }>, res: Response) => {
+router.delete("/:userId/:bookId", async (req: Request<{ userId: string; bookId: string }>, res: Response) => {
   const userId = req.params.userId;
   const bookId = req.params.bookId;
-  RentalMapping.validateIdentifiers(userId, bookId);
+  const mapper = Rental.fromId(bookId, userId);
 
-  await DI.database.rentals.delete(Rental.getPrimaryKey(userId, bookId));
+  const result = await DI.database.actions.delete(mapper.toKey());
 
-  res.json(RentalMapping.emptyMapping(userId, bookId));
+  if (!result) {
+    throw new NotFoundError("Rental");
+  }
+
+  res.json(mapper.emptyMapping());
 });
 
 export const RentalController = router;

@@ -1,67 +1,143 @@
-import attribute from 'dynamode/decorators';
-import KSUID from 'ksuid';
-import moment from 'moment';
-import { LibraryTable, LibraryTablePrimaryKey, LibraryTableProps } from './base/LibraryTable';
-import { AuthorMapping } from '../mapping/AuthorMapping';
-import { IMappable } from "../mapping/interfaces/IMappable";
-import { IUpdateable } from "../mapping/interfaces/IUpdateable";
+import KSUID from "ksuid";
+import moment from "moment";
+import { MappingValidationError } from "../exceptions/MappingValidationError";
+import { BaseModel, EmptyMapping, IMapper, PrimaryKey } from "./base";
+import { FieldsToUpdate } from "../database/DatabaseActionsProvider";
 
-type AuthorFields = {
+type AuthorPayload = {
+  id?: string;
   name: string;
-  birthdate: Date;
+  birthdate: string;
+  createdAt?: string;
+  updatedAt?: string;
 };
 
-type AuthorProps = LibraryTableProps & AuthorFields;
-
-export class Author extends LibraryTable implements IMappable, IUpdateable {
-  @attribute.partitionKey.string({ prefix: Author.name }) // `Author#${authorId}`
-  resourceId!: string;
-
-  @attribute.sortKey.string({ prefix: Author.name }) // `Author#${authorId}`
-  subResourceId!: string;
-
-  @attribute.string()
+export type AuthorModel = BaseModel & {
   name: string;
+  birthdate: string;
+};
 
-  @attribute.date.string()
-  birthdate: Date;
+export class Author implements IMapper<AuthorPayload, AuthorModel> {
+  private readonly id: KSUID;
+  private readonly name: string;
+  private readonly birthdate: Date;
 
-  protected constructor(props: AuthorProps) {
-    super(props);
-
-    this.name = props.name;
-    this.birthdate = props.birthdate;
+  protected constructor(payload: AuthorPayload) {
+    this.id = payload.id ? KSUID.parse(payload.id) : KSUID.randomSync();
+    this.name = payload.name;
+    this.birthdate = moment(payload.birthdate).toDate();
   }
 
-  toMapping(): AuthorMapping {
-    return AuthorMapping.fromEntity(this);
+  static fromPayload(payload: AuthorPayload) {
+    if (!payload.name) {
+      throw new MappingValidationError("Field `name` is required and should be a non-empty string");
+    }
+
+    if (!payload.birthdate) {
+      throw new MappingValidationError("Field `birthdate` is required");
+    }
+
+    if (!moment(payload.birthdate).isValid()) {
+      throw new MappingValidationError("Field `birthdate` must convert to date and time");
+    }
+
+    return new Author(payload);
   }
 
-  toUpdateStructure(): { set: AuthorFields } {
-    return {
-      set: {
-        name: this.name,
-        birthdate: this.birthdate
-      }
-    };
-  }
+  static fromPayloadForUpdate(id: string, payload: AuthorPayload) {
+    try {
+      KSUID.parse(id);
+    } catch (error: any) {
+      throw new MappingValidationError("The provided ID must be a valid KSUID");
+    }
 
-  static fromMapping(id: KSUID, mapping: AuthorMapping): Author {
+    if (payload.name && payload.name === "") {
+      throw new MappingValidationError("Field `name` should be a non-empty string");
+    }
+
+    if (payload.birthdate && !moment(payload.birthdate).isValid()) {
+      throw new MappingValidationError("Field `birthdate` must convert to date and time");
+    }
+
     return new Author({
-      ...Author.getPrimaryKey(id.string),
-      name: mapping.name,
-      birthdate: moment(mapping.birthdate).toDate()
-    })
+      id,
+      ...payload,
+    });
   }
 
-  static fromCompleteMapping(mapping: AuthorMapping): Author {
-    return Author.fromMapping(KSUID.parse(mapping.id!), mapping);
+  static fromId(id: string) {
+    try {
+      KSUID.parse(id);
+    } catch (error: any) {
+      throw new MappingValidationError("The provided ID must be a valid KSUID");
+    }
+
+    return new Author({
+      id,
+      name: "",
+      birthdate: "",
+    });
   }
 
-  static getPrimaryKey(authorId: string): LibraryTablePrimaryKey {
+  static fromModel(model: AuthorModel) {
+    const id = model.resourceId.split("#")[1];
+
+    try {
+      KSUID.parse(id);
+    } catch (error: any) {
+      throw new MappingValidationError("The provided ID must be a valid KSUID");
+    }
+
+    return new Author({
+      id,
+      name: model.name,
+      birthdate: model.birthdate,
+    });
+  }
+
+  emptyMapping(): EmptyMapping {
     return {
-      resourceId: authorId,
-      subResourceId: authorId
+      id: this.id.string,
     };
+  }
+
+  toKey(): PrimaryKey {
+    return {
+      resourceId: `Author#${this.id.string}`,
+      subResourceId: `Author#${this.id.string}`,
+    };
+  }
+
+  toModel() {
+    return {
+      ...this.toKey(),
+      type: Author.name,
+      name: this.name,
+      birthdate: moment(this.birthdate).toISOString(),
+      createdAt: moment().toISOString(),
+      updatedAt: moment().toISOString(),
+    };
+  }
+
+  toMapping(): AuthorPayload {
+    return {
+      id: this.id.string,
+      name: this.name,
+      birthdate: moment(this.birthdate).toISOString(),
+    };
+  }
+
+  toUpdate(): FieldsToUpdate {
+    const fields = [];
+
+    if (this.name) {
+      fields.push({ name: "name", value: this.name });
+    }
+
+    if (this.birthdate) {
+      fields.push({ name: "birthdate", value: moment(this.birthdate).toISOString() });
+    }
+
+    return fields;
   }
 }
