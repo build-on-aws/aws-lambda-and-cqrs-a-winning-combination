@@ -64,6 +64,8 @@ Resources:
           AttributeType: S
         - AttributeName: type
           AttributeType: S
+        - AttributeName: status
+          AttributeType: S
         # ... and the rest of non-key attributes:
         #
         # - AttributeName: name
@@ -72,13 +74,11 @@ Resources:
         #   AttributeType: S
         # - AttributeName: birthdate
         #   AttributeType: S
-        # - AttributeName: status
-        #   AttributeType: S
         # - AttributeName: comment
         #   AttributeType: S
-        # - AttributeName: created_at
+        # - AttributeName: createdAt
         #   AttributeType: S
-        # - AttributeName: updated_at
+        # - AttributeName: updatedAt
         #   AttributeType: S
         # - AttributeName: title
         #   AttributeType: S
@@ -90,6 +90,16 @@ Resources:
             - AttributeName: type
               KeyType: HASH
             - AttributeName: subResourceId
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+          ContributorInsightsSpecification:
+            Enabled: true
+        - IndexName: entity-status
+          KeySchema:
+            - AttributeName: type
+              KeyType: HASH
+            - AttributeName: status
               KeyType: RANGE
           Projection:
             ProjectionType: ALL
@@ -115,7 +125,7 @@ Resources:
     Properties:
       ContentUri: layers/library-system-common/
       CompatibleRuntimes:
-        - nodejs18.x
+        - nodejs20.x
       RetentionPolicy: Delete
 
   CommandsDispatcher:
@@ -135,7 +145,7 @@ Resources:
       Handler: handler.commands
       Layers:
         - !Ref LibrarySystemCommonLayer
-      Runtime: nodejs18.x
+      Runtime: nodejs20.x
       Architectures:
         - x86_64
       Environment:
@@ -233,7 +243,7 @@ Resources:
       Handler: handler.queries
       Layers:
         - !Ref LibrarySystemCommonLayer
-      Runtime: nodejs18.x
+      Runtime: nodejs20.x
       Architectures:
         - x86_64
       Environment:

@@ -24,10 +24,10 @@ router.post("/:authorId", async (req: Request<{ authorId: string }>, res: Respon
 
 router.get("/", async (req: Request, res: Response) => {
   const pagination = extractPaginationDetails(req);
-  const filtering = extractFiltering(req, "status");
+  const filterByStatus = extractFiltering(req, "status");
 
-  const collection = filtering
-    ? await DI.database.actions.query(ByTypeAndStatus("Book", filtering.value), Index.STATUS, pagination)
+  const collection = filterByStatus
+    ? await DI.database.actions.query(ByTypeAndStatus("Book", filterByStatus.value), Index.STATUS, pagination)
     : await DI.database.actions.query(ByType("Book"), Index.TYPE, pagination);
 
   res.json(collection.map((entity) => Book.fromModel(entity as BookModel).toMapping()));

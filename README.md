@@ -14,7 +14,7 @@ Here you can find a list of the recommended prerequisites for this repository.
   - [Finch](https://runfinch.com) or any other tool for local container development compatible with *Docker* APIs.
   - Most recent *AWS CLI*.
   - Most recent *AWS SAM CLI*.
-  - Node.js in version `18.18.x` or higher.
+  - Node.js in version `20.9.x` or higher.
 - Configured profile in the installed *AWS CLI* with credentials for your *AWS IAM* user account of choice.
 
 If you would like to start all the dependent services, run the following commands:
@@ -82,11 +82,13 @@ Starting from the initial stage, the internals of the application looks as follo
 
 ![Starting point for the discussion: CRUD-like implementation of the system](./docs/step-00-crud-components.png)
 
-Application have 3 entities:
+Application have 4 entities:
 
-- `Author` with `name` field.
-- `User` with fields: `email`, `name`, `status`, and `comment` (as name suggests - relevant to the `status` field).
-- `Book` with fields `title`, `isbn` (which is a short for *International Standard Book Number*), `author` (pointing to `Author` entity), `borrower` (pointing to `User` entity), and `status`.
+- `Author` with `name` and `birthdate` field.
+- `Book` connected with `Author`, with fields `title`, `isbn`, and `status`.
+  - `isbn` is a short for *International Standard Book Number*.
+- `Rental` that is connecting user and book, with fields `status` and `comment` (mostly relevant to the `status` field).
+- `User` with fields: `email`, `name`, `status`, and `comment` (mostly relevant to the `status` field).
 
 If you have a closer look on the *API*, it is very CRUD-oriented:
 
@@ -165,18 +167,18 @@ POST    /book/:bookId/missing                   Command: `ReportMissingBook`
 
 #### Why do you want a refactor from CRUD to CQRS?
 
-There are a few important reasons collected below:
+There are many important reasons, but for this particular use case - I have collected all of them below:
 
-- Maintainability:
+- **Maintainability**.
   - Readability.
     - Better understanding due to closer domain representation.
-  - Lower complexity = Lower cognitive load.
-- Usability:
+    - Lower complexity that directly transfers to the lower cognitive load.
+- **Usability**.
   - Developer Experience.
-  - Promoting Task-based UI.
-- Flexibility:
-  - Infrastructure-wise.
-    - Unit of Deployments.
+  - Introducing _Task-based User Interface (UI)_.
+- **Flexibility**.
+  - Better flexibility in terms of infrastructure improvements.
+  - Smaller and more independent _Unit of Deployments_.
 
 ### Phase 2: Deploying CQRS in AWS Lambda Environment
 

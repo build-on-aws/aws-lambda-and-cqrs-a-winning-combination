@@ -62,6 +62,8 @@ Resources:
           AttributeType: S
         - AttributeName: type
           AttributeType: S
+        - AttributeName: status
+          AttributeType: S
         # ... and the rest of non-key attributes:
         #
         # - AttributeName: name
@@ -69,8 +71,6 @@ Resources:
         # - AttributeName: email
         #   AttributeType: S
         # - AttributeName: birthdate
-        #   AttributeType: S
-        # - AttributeName: status
         #   AttributeType: S
         # - AttributeName: comment
         #   AttributeType: S
@@ -88,6 +88,16 @@ Resources:
             - AttributeName: type
               KeyType: HASH
             - AttributeName: subResourceId
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+          ContributorInsightsSpecification:
+            Enabled: true
+        - IndexName: entity-status
+          KeySchema:
+            - AttributeName: type
+              KeyType: HASH
+            - AttributeName: status
               KeyType: RANGE
           Projection:
             ProjectionType: ALL
@@ -119,7 +129,7 @@ Resources:
     Properties:
       CodeUri: library/
       Handler: handler.main
-      Runtime: nodejs18.x
+      Runtime: nodejs20.x
       Architectures:
         - x86_64
       Environment:
