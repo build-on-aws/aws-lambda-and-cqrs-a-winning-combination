@@ -1,26 +1,22 @@
-import { Logger } from '@aws-lambda-powertools/logger';
-import { Metrics } from '@aws-lambda-powertools/metrics';
-import { Tracer } from '@aws-lambda-powertools/tracer';
+import { Logger } from "@aws-lambda-powertools/logger";
+import { Metrics } from "@aws-lambda-powertools/metrics";
+import { Tracer } from "@aws-lambda-powertools/tracer";
 
 const logger = new Logger({
   persistentLogAttributes: {
-    aws_account_id: process.env.AWS_ACCOUNT_ID || 'N/A',
-    aws_region: process.env.AWS_REGION || 'N/A',
-  }
+    aws_account_id: process.env.AWS_ACCOUNT_ID || "N/A",
+    aws_region: process.env.AWS_REGION || "N/A",
+  },
 });
 
 const metrics = new Metrics({
-  namespace: 'library-system/approach-00',
+  namespace: "library-system/approach-00",
   defaultDimensions: {
-    aws_account_id: process.env.AWS_ACCOUNT_ID || 'N/A',
-    aws_region: process.env.AWS_REGION || 'N/A',
-  }
+    aws_account_id: process.env.AWS_ACCOUNT_ID || "N/A",
+    aws_region: process.env.AWS_REGION || "N/A",
+  },
 });
 
 const tracer = new Tracer();
 
-export {
-  logger,
-  metrics,
-  tracer
-};
+export { logger, metrics, tracer };
