@@ -19,7 +19,7 @@ describe("CRUD Controller: /author", () => {
       });
   });
 
-  it("Create", async () => {
+  it("Create author", async () => {
     await agent
       .post("/author")
       .set("Content-Type", "application/json")
@@ -33,7 +33,7 @@ describe("CRUD Controller: /author", () => {
       });
   });
 
-  it("Read all", async () => {
+  it("Get all authors", async () => {
     await agent.get("/author").then((res) => {
       expect(res.status).toBe(200);
       expect(res.body).toHaveLength(1);
@@ -43,7 +43,7 @@ describe("CRUD Controller: /author", () => {
     });
   });
 
-  it("Read", async () => {
+  it("Get author", async () => {
     await agent.get(`/author/${id}`).then((res) => {
       expect(res.status).toBe(200);
       expect(res.body.id).toBe(id);
@@ -52,7 +52,7 @@ describe("CRUD Controller: /author", () => {
     });
   });
 
-  it("Read, but not found", async () => {
+  it("Get author, but entity not found", async () => {
     const nonExistingId = getFakeAuthorId();
 
     await agent.get(`/author/${nonExistingId}`).then((res) => {
@@ -60,7 +60,7 @@ describe("CRUD Controller: /author", () => {
     });
   });
 
-  it("Update", async () => {
+  it("Update author", async () => {
     const updatedAuthor = {
       name: "Jane Doe",
       birthdate: "1980-02-16T11:11:11.000Z",
@@ -80,7 +80,7 @@ describe("CRUD Controller: /author", () => {
       });
   });
 
-  it("Update, but not all fields", async () => {
+  it("Update author, but not all fields", async () => {
     const updatedAuthor = {
       name: "Jane Doe",
     };
@@ -98,7 +98,7 @@ describe("CRUD Controller: /author", () => {
       });
   });
 
-  it("Update, but not found", async () => {
+  it("Update author, but entity not found", async () => {
     const nonExistingId = getFakeAuthorId();
 
     await agent
@@ -109,7 +109,7 @@ describe("CRUD Controller: /author", () => {
       });
   });
 
-  it("Update, but with no fields for update provided", async () => {
+  it("Update author, but with no fields for update provided", async () => {
     const nonExistingId = getFakeAuthorId();
 
     await agent
@@ -120,14 +120,14 @@ describe("CRUD Controller: /author", () => {
       });
   });
 
-  it("Delete", async () => {
+  it("Delete author", async () => {
     await agent.delete(`/author/${id}`).then((res) => {
       expect(res.status).toBe(200);
       expect(res.body.id).toBe(id);
     });
   });
 
-  it("Delete, but not found", async () => {
+  it("Delete author, but entity not found", async () => {
     const nonExistingId = getFakeAuthorId();
 
     await agent.delete(`/author/${nonExistingId}`).then((res) => {
@@ -135,7 +135,7 @@ describe("CRUD Controller: /author", () => {
     });
   });
 
-  it("Read all, but this time empty collection", async () => {
+  it("Get all authors, but this time empty collection", async () => {
     await agent.get("/author").then((res) => {
       expect(res.status).toBe(200);
       expect(res.body).toHaveLength(0);

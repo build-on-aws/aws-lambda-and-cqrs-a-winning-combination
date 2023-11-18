@@ -4,7 +4,7 @@ import { extractPaginationDetails } from "../common/controllers";
 import { NotFoundError } from "../exceptions/NotFoundError";
 import { DI } from "../server";
 import { User, UserModel } from "../model/User";
-import { ByType } from "../database/DatabaseActionsProvider";
+import { ByType, Index } from "../database/DatabaseActionsProvider";
 
 const router = Router();
 
@@ -24,7 +24,7 @@ router.post("/", async (req: Request, res: Response) => {
 router.get("/", async (req: Request, res: Response) => {
   const pagination = extractPaginationDetails(req);
 
-  const collection = await DI.database.actions.queryWithIndex(ByType("User"), pagination);
+  const collection = await DI.database.actions.query(ByType("User"), Index.TYPE, pagination);
 
   res.json(collection.map((entity) => User.fromModel(entity as UserModel).toMapping()));
 });

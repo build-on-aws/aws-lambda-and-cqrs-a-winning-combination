@@ -4,7 +4,7 @@ import { extractPaginationDetails } from "../common/controllers";
 import { NotFoundError } from "../exceptions/NotFoundError";
 import { DI } from "../server";
 import { Author, AuthorModel } from "../model/Author";
-import { ByType } from "../database/DatabaseActionsProvider";
+import { ByType, Index } from "../database/DatabaseActionsProvider";
 
 const router = Router();
 
@@ -24,7 +24,7 @@ router.post("/", async (req: Request, res: Response) => {
 router.get("/", async (req: Request, res: Response) => {
   const pagination = extractPaginationDetails(req);
 
-  const collection = await DI.database.actions.queryWithIndex(ByType("Author"), pagination);
+  const collection = await DI.database.actions.query(ByType("Author"), Index.TYPE, pagination);
 
   res.json(collection.map((entity) => Author.fromModel(entity as AuthorModel).toMapping()));
 });

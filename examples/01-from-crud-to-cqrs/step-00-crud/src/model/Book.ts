@@ -1,7 +1,7 @@
 import KSUID from "ksuid";
 import moment from "moment";
 import { MappingValidationError } from "../exceptions/MappingValidationError";
-import { BaseModel, IMapper, PrimaryKey } from "./base";
+import { BaseModel, IMapper, PrimaryKey } from "../common/model";
 import { FieldsToUpdate } from "../database/DatabaseActionsProvider";
 
 type BookPayload = {
@@ -147,7 +147,7 @@ export class Book implements IMapper<BookPayload, BookModel, EmptyBookMapping> {
 
   toKey(): PrimaryKey {
     return {
-      resourceId: `User#${this.bookId.string}`,
+      resourceId: `Book#${this.bookId.string}`,
       subResourceId: `Author#${this.authorId.string}`,
     };
   }

@@ -42,3 +42,13 @@ export const extractPaginationDetails = (req: Request): PaginationParameters => 
     ScanIndexForward,
   };
 };
+
+export const extractFiltering = (req: Request, name: string) => {
+  const rawValueForFilteringField = req.query[name];
+
+  if (rawValueForFilteringField) {
+    return { value: rawValueForFilteringField as string };
+  } else {
+    return undefined;
+  }
+};

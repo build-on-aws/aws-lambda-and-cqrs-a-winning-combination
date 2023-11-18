@@ -1,10 +1,10 @@
 import Router from "express-promise-router";
 import { Request, Response } from "express";
-import { extractPaginationDetails } from "../common/controllers";
+import { extractPaginationDetails, extractFiltering } from "../common/controllers";
 import { NotFoundError } from "../exceptions/NotFoundError";
 import { DI } from "../server";
 import { Book, BookModel } from "../model/Book";
-import { ByType, ByTypeAndSortKey } from "../database/DatabaseActionsProvider";
+import { ByType, ByTypeAndSortKey, ByTypeAndStatus, Index } from "../database/DatabaseActionsProvider";
 
 const router = Router();
 
@@ -24,8 +24,11 @@ router.post("/:authorId", async (req: Request<{ authorId: string }>, res: Respon
 
 router.get("/", async (req: Request, res: Response) => {
   const pagination = extractPaginationDetails(req);
+  const filtering = extractFiltering(req, "status");
 
-  const collection = await DI.database.actions.queryWithIndex(ByType("Book"), pagination);
+  const collection = filtering
+    ? await DI.database.actions.query(ByTypeAndStatus("Book", filtering.value), Index.STATUS, pagination)
+    : await DI.database.actions.query(ByType("Book"), Index.TYPE, pagination);
 
   res.json(collection.map((entity) => Book.fromModel(entity as BookModel).toMapping()));
 });
@@ -36,8 +39,9 @@ router.get("/:authorId", async (req: Request<{ authorId: string }>, res: Respons
   const authorId = req.params.authorId;
   const pagination = extractPaginationDetails(req);
 
-  const collection = await DI.database.actions.queryWithIndex(
+  const collection = await DI.database.actions.query(
     ByTypeAndSortKey("Book", `Author#${authorId}`),
+    Index.TYPE,
     pagination,
   );
 

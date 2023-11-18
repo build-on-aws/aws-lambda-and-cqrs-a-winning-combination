@@ -3,7 +3,8 @@ import { DeleteTableCommand, DeleteTableCommandInput } from "@aws-sdk/client-dyn
 import { DynamoDBDocument } from "@aws-sdk/lib-dynamodb";
 
 const TABLE_NAME: string = "library-system-database";
-const INDEX_NAME: string = "GSI1";
+const ENTITY_TYPE_INDEX: string = "GSI1";
+const ENTITY_STATUS_INDEX: string = "GSI2";
 
 const CREATE_TABLE_COMMAND: CreateTableCommandInput = {
   TableName: TABLE_NAME,
@@ -15,13 +16,24 @@ const CREATE_TABLE_COMMAND: CreateTableCommandInput = {
     { AttributeName: "resourceId", AttributeType: "S" },
     { AttributeName: "subResourceId", AttributeType: "S" },
     { AttributeName: "type", AttributeType: "S" },
+    { AttributeName: "status", AttributeType: "S" },
   ],
   GlobalSecondaryIndexes: [
     {
-      IndexName: INDEX_NAME,
+      IndexName: ENTITY_TYPE_INDEX,
       KeySchema: [
         { AttributeName: "type", KeyType: "HASH" },
         { AttributeName: "subResourceId", KeyType: "RANGE" },
+      ],
+      Projection: {
+        ProjectionType: "ALL",
+      },
+    },
+    {
+      IndexName: ENTITY_STATUS_INDEX,
+      KeySchema: [
+        { AttributeName: "type", KeyType: "HASH" },
+        { AttributeName: "status", KeyType: "RANGE" },
       ],
       Projection: {
         ProjectionType: "ALL",
@@ -40,22 +52,29 @@ export class LibrarySystemDatabase {
   private readonly logger;
 
   private readonly tableName;
-  private readonly typeIndexName;
+  private readonly entityTypeIndexName;
+  private readonly entityStatusIndexName;
 
   constructor(client: DynamoDBDocument, logger: Console) {
     this.client = client;
     this.logger = logger;
 
     this.tableName = TABLE_NAME;
-    this.typeIndexName = INDEX_NAME;
+
+    this.entityTypeIndexName = ENTITY_TYPE_INDEX;
+    this.entityStatusIndexName = ENTITY_STATUS_INDEX;
   }
 
   getTableName(): string {
     return this.tableName;
   }
 
-  getTypeIndexName(): string {
-    return this.typeIndexName;
+  getEntityTypeIndexName(): string {
+    return this.entityTypeIndexName;
+  }
+
+  getEntityStatusIndexName(): string {
+    return this.entityStatusIndexName;
   }
 
   async createTable() {

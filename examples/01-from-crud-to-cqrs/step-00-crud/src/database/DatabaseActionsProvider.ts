@@ -1,7 +1,7 @@
 import moment from "moment";
 import { DynamoDBDocument } from "@aws-sdk/lib-dynamodb";
 import { LibrarySystemDatabase } from "./LibrarySystemDatabase";
-import { BaseModel, PrimaryKey } from "../model/base";
+import { BaseModel, PrimaryKey } from "../common/model";
 import { NoFieldsToUpdate } from "../exceptions/NoFieldsToUpdate";
 
 type MarshalledPrimaryKey = {
@@ -32,12 +32,21 @@ type QueryTriple = Pair & {
 
 type Dict = Record<string, string>;
 
+export enum Index {
+  TYPE = "TYPE",
+  STATUS = "STATUS",
+}
+
 export const ByType = (typeValue: string): QueryTriple[] => {
   return [{ name: "type", operator: QueryOperator.EQ, value: typeValue }];
 };
 
 export const ByTypeAndSortKey = (typeValue: string, sortKeyValue: string): QueryTriple[] => {
   return ByType(typeValue).concat({ name: "subResourceId", operator: QueryOperator.EQ, value: sortKeyValue });
+};
+
+export const ByTypeAndStatus = (typeValue: string, statusValue: string): QueryTriple[] => {
+  return ByType(typeValue).concat({ name: "status", operator: QueryOperator.EQ, value: statusValue });
 };
 
 export class DatabaseActionsProvider {
@@ -64,7 +73,7 @@ export class DatabaseActionsProvider {
     }
   }
 
-  async queryWithIndex(parameters: QueryTriple[], pagination: PaginationParameters) {
+  async query(parameters: QueryTriple[], index?: Index, pagination?: PaginationParameters) {
     const { expression, names, values } = this.prepareQuery(parameters);
 
     const result = await this.client.query({
@@ -72,7 +81,7 @@ export class DatabaseActionsProvider {
       KeyConditionExpression: expression,
       ExpressionAttributeNames: names,
       ExpressionAttributeValues: values,
-      IndexName: this.table.getTypeIndexName(),
+      IndexName: this.assignIndex(index),
       ...pagination,
     });
 
@@ -170,5 +179,18 @@ export class DatabaseActionsProvider {
       .join(" AND ");
 
     return { expression, names, values };
+  }
+
+  private assignIndex(index?: Index) {
+    switch (index) {
+      case Index.TYPE:
+        return this.table.getEntityTypeIndexName();
+
+      case Index.STATUS:
+        return this.table.getEntityStatusIndexName();
+
+      default:
+        return undefined;
+    }
   }
 }

@@ -93,15 +93,16 @@ If you have a closer look on the *API*, it is very CRUD-oriented:
 ```text
 POST    /author                     creates new author
 GET     /author                     finds all authors
-GET     /author/:id                 finds author by id
-PUT     /author/:id                 updates author by id
-DELETE  /author/:id                 deletes author by id
+GET     /author/:authorId           finds author by author identifier
+PUT     /author/:authorId           updates author by author identifier
+DELETE  /author/:authorId           deletes author by author identifier
 
-POST    /book                       creates new book
-GET     /book                       finds all books
-GET     /book/:id                   finds book by id
-PUT     /book/:id                   updates book by id
-DELETE  /book/:id                   deletes book by id
+POST    /book/:authorId             creates new book for a given author
+GET     /book?status=missing        finds all books, that can be filtered by a provided status
+GET     /book/:authorId             finds all books for a given author
+GET     /book/:authorId/:bookId     finds book by author and book identifiers
+PUT     /book/:authorId/:bookId     updates book by author and book identifiers
+DELETE  /book/:authorId/:bookId     deletes book by author and book identifiers
 
 POST    /rental/:userId/:bookId     creates a new book rental between user and book
 GET     /rental                     finds all rentals
@@ -112,9 +113,9 @@ DELETE  /rental/:userId/:bookId     deletes rental user and book identifiers
 
 POST    /user                       creates new user
 GET     /user                       finds all users
-GET     /user/:id                   finds user by id
-PUT     /user/:id                   updates user by id
-DELETE  /user/:id                   deletes user by id
+GET     /user/:userId               finds user by user identifier
+PUT     /user/:userId               updates user by user identifier
+DELETE  /user/:userId               deletes user by user identifier
 ```
 
 ### Phase 1: Refactoring from CRUD to CQRS

@@ -21,7 +21,7 @@ describe("CRUD Controller: /book", () => {
       });
   });
 
-  it("Create", async () => {
+  it("Create book", async () => {
     await agent
       .post(`/book/${authorId}`)
       .set("Content-Type", "application/json")
@@ -37,7 +37,7 @@ describe("CRUD Controller: /book", () => {
       });
   });
 
-  it("Read all", async () => {
+  it("Get all books", async () => {
     await agent.get("/book").then((res) => {
       expect(res.status).toBe(200);
       expect(res.body).toHaveLength(1);
@@ -49,7 +49,7 @@ describe("CRUD Controller: /book", () => {
     });
   });
 
-  it("Read all books for a given author", async () => {
+  it("Get all books for a given author", async () => {
     await agent.get(`/book/${authorId}`).then((res) => {
       expect(res.status).toBe(200);
       expect(res.body).toHaveLength(1);
@@ -61,7 +61,7 @@ describe("CRUD Controller: /book", () => {
     });
   });
 
-  it("Read", async () => {
+  it("Get book", async () => {
     await agent.get(`/book/${authorId}/${bookId}`).then((res) => {
       expect(res.status).toBe(200);
       expect(res.body.bookId).toBe(bookId);
@@ -72,7 +72,7 @@ describe("CRUD Controller: /book", () => {
     });
   });
 
-  it("Read, but not found", async () => {
+  it("Get book, but entity not found", async () => {
     const nonExistingAuthorId = getFakeAuthorId();
 
     await agent.get(`/book/${nonExistingAuthorId}/${bookId}`).then((res) => {
@@ -80,7 +80,7 @@ describe("CRUD Controller: /book", () => {
     });
   });
 
-  it("Update", async () => {
+  it("Update book", async () => {
     const bookUpdate = {
       title: "Yet Another Changed Title",
       isbn: "960-425-059-0",
@@ -104,7 +104,29 @@ describe("CRUD Controller: /book", () => {
       });
   });
 
-  it("Update, but not all fields", async () => {
+  it("Get all books filtered by status", async () => {
+    await agent.get(`/book/?status=MISSING`).then((res) => {
+      expect(res.status).toBe(200);
+      expect(res.body).toHaveLength(1);
+      expect(res.body[0].bookId).toBe(bookId);
+      expect(res.body[0].authorId).toBe(authorId);
+      expect(res.body[0].title).toBe(book.title);
+      expect(res.body[0].isbn).toBe(book.isbn);
+      expect(res.body[0].status).toBe(BookStatus.MISSING);
+    });
+
+    await agent.get(`/book/?status=AVAILABLE`).then((res) => {
+      expect(res.status).toBe(200);
+      expect(res.body).toHaveLength(0);
+    });
+
+    await agent.get(`/book/?status=NOT_AVAILABLE`).then((res) => {
+      expect(res.status).toBe(200);
+      expect(res.body).toHaveLength(0);
+    });
+  });
+
+  it("Update book, but not all fields", async () => {
     const bookUpdate = {
       title: "Yet Another Changed Title",
     };
@@ -124,7 +146,7 @@ describe("CRUD Controller: /book", () => {
       });
   });
 
-  it("Update, but not found", async () => {
+  it("Update book, but entity not found", async () => {
     const nonExistingAuthorId = getFakeAuthorId();
 
     await agent
@@ -135,7 +157,7 @@ describe("CRUD Controller: /book", () => {
       });
   });
 
-  it("Update, but with no fields for update provided", async () => {
+  it("Update book, but with no fields for update provided", async () => {
     const nonExistingAuthorId = getFakeAuthorId();
 
     await agent
@@ -146,7 +168,7 @@ describe("CRUD Controller: /book", () => {
       });
   });
 
-  it("Delete", async () => {
+  it("Delete book", async () => {
     await agent.delete(`/book/${authorId}/${bookId}`).then((res) => {
       expect(res.status).toBe(200);
       expect(res.body.bookId).toBe(bookId);
@@ -154,7 +176,7 @@ describe("CRUD Controller: /book", () => {
     });
   });
 
-  it("Delete, but not found", async () => {
+  it("Delete book, but entity not found", async () => {
     const nonExistingAuthorId = getFakeAuthorId();
 
     await agent.delete(`/book/${nonExistingAuthorId}/${bookId}`).then((res) => {
@@ -162,7 +184,7 @@ describe("CRUD Controller: /book", () => {
     });
   });
 
-  it("Read all, but this time empty collection", async () => {
+  it("Get all books, but this time empty collection", async () => {
     await agent.get("/book").then((res) => {
       expect(res.status).toBe(200);
       expect(res.body).toHaveLength(0);

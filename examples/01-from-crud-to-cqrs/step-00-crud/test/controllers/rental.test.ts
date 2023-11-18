@@ -11,7 +11,7 @@ describe("CRUD Controller: /rental", () => {
   const bookId = getFakeBookId();
   const rental: { status?: RentalStatus; comment?: string } = {};
 
-  it("Create", async () => {
+  it("Create rental", async () => {
     await agent
       .post(`/rental/${user.id}/${bookId}`)
       .set("Content-Type", "application/json")
@@ -25,7 +25,7 @@ describe("CRUD Controller: /rental", () => {
       });
   });
 
-  it("Read all", async () => {
+  it("Get all rentals", async () => {
     await agent.get("/rental").then((res) => {
       expect(res.status).toBe(200);
       expect(res.body).toHaveLength(1);
@@ -36,7 +36,7 @@ describe("CRUD Controller: /rental", () => {
     });
   });
 
-  it("Read all rentals for a given user", async () => {
+  it("Get all rentals for a given user", async () => {
     await agent.get(`/rental/${user.id}`).then((res) => {
       expect(res.status).toBe(200);
       expect(res.body).toHaveLength(1);
@@ -47,7 +47,7 @@ describe("CRUD Controller: /rental", () => {
     });
   });
 
-  it("Read", async () => {
+  it("Get rental", async () => {
     await agent.get(`/rental/${user.id}/${bookId}`).then((res) => {
       expect(res.status).toBe(200);
       expect(res.body.userId).toBe(user.id);
@@ -57,7 +57,7 @@ describe("CRUD Controller: /rental", () => {
     });
   });
 
-  it("Read, but not found", async () => {
+  it("Get rental, but entity not found", async () => {
     const nonExistingUserId = getFakeUserId();
 
     await agent.get(`/rental/${nonExistingUserId}/${bookId}`).then((res) => {
@@ -65,7 +65,7 @@ describe("CRUD Controller: /rental", () => {
     });
   });
 
-  it("Update", async () => {
+  it("Update rental", async () => {
     const rentalUpdate = {
       status: "RETURNED",
       comment: "This is a comment",
@@ -86,7 +86,7 @@ describe("CRUD Controller: /rental", () => {
       });
   });
 
-  it("Update, but not all fields", async () => {
+  it("Update rental, but not all fields", async () => {
     const rentalUpdate = {
       comment: "This is a comment",
     };
@@ -105,7 +105,7 @@ describe("CRUD Controller: /rental", () => {
       });
   });
 
-  it("Update, but not found", async () => {
+  it("Update rental, but entity not found", async () => {
     const nonExistingUserId = getFakeUserId();
 
     await agent
@@ -116,7 +116,7 @@ describe("CRUD Controller: /rental", () => {
       });
   });
 
-  it("Update, but with no fields for update provided", async () => {
+  it("Update rental, but with no fields for update provided", async () => {
     const nonExistingUserId = getFakeUserId();
 
     await agent
@@ -127,7 +127,7 @@ describe("CRUD Controller: /rental", () => {
       });
   });
 
-  it("Delete", async () => {
+  it("Delete rental", async () => {
     await agent.delete(`/rental/${user.id}/${bookId}`).then((res) => {
       expect(res.status).toBe(200);
       expect(res.body.userId).toBe(user.id);
@@ -135,7 +135,7 @@ describe("CRUD Controller: /rental", () => {
     });
   });
 
-  it("Delete, but not found", async () => {
+  it("Delete rental, but entity not found", async () => {
     const nonExistingUserId = getFakeUserId();
 
     await agent.delete(`/rental/${nonExistingUserId}/${bookId}`).then((res) => {
@@ -143,7 +143,7 @@ describe("CRUD Controller: /rental", () => {
     });
   });
 
-  it("Read all, but this time empty collection", async () => {
+  it("Get all rentals, but this time empty collection", async () => {
     await agent.get("/rental").then((res) => {
       expect(res.status).toBe(200);
       expect(res.body).toHaveLength(0);

@@ -1,7 +1,7 @@
 import KSUID from "ksuid";
 import moment from "moment";
 import { MappingValidationError } from "../exceptions/MappingValidationError";
-import { BaseModel, IMapper, PrimaryKey } from "./base";
+import { BaseModel, IMapper, PrimaryKey } from "../common/model";
 import { FieldsToUpdate } from "../database/DatabaseActionsProvider";
 
 type RentalPayload = {

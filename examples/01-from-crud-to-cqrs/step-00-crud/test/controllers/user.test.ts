@@ -20,7 +20,7 @@ describe("CRUD Controller: /user", () => {
       });
   });
 
-  it("Create", async () => {
+  it("Create user", async () => {
     await agent
       .post("/user")
       .set("Content-Type", "application/json")
@@ -36,7 +36,7 @@ describe("CRUD Controller: /user", () => {
       });
   });
 
-  it("Read all", async () => {
+  it("Get all users", async () => {
     await agent.get("/user").then((res) => {
       expect(res.status).toBe(200);
       expect(res.body).toHaveLength(1);
@@ -48,7 +48,7 @@ describe("CRUD Controller: /user", () => {
     });
   });
 
-  it("Read", async () => {
+  it("Get user", async () => {
     await agent.get(`/user/${id}`).then((res) => {
       expect(res.status).toBe(200);
       expect(res.body.id).toBe(id);
@@ -59,7 +59,7 @@ describe("CRUD Controller: /user", () => {
     });
   });
 
-  it("Read, but not found", async () => {
+  it("Get user, but entity not found", async () => {
     const nonExistingId = getFakeUserId();
 
     await agent.get(`/user/${nonExistingId}`).then((res) => {
@@ -67,7 +67,7 @@ describe("CRUD Controller: /user", () => {
     });
   });
 
-  it("Update", async () => {
+  it("Update user", async () => {
     const userUpdate = {
       name: "Jane Doe",
       email: "update+test@example.com",
@@ -93,7 +93,7 @@ describe("CRUD Controller: /user", () => {
       });
   });
 
-  it("Update, but not all fields", async () => {
+  it("Update user, but not all fields", async () => {
     const userUpdate = {
       name: "Jane Foe",
     };
@@ -113,7 +113,7 @@ describe("CRUD Controller: /user", () => {
       });
   });
 
-  it("Update, but not found", async () => {
+  it("Update user, but entity not found", async () => {
     const nonExistingId = getFakeUserId();
 
     await agent
@@ -124,7 +124,7 @@ describe("CRUD Controller: /user", () => {
       });
   });
 
-  it("Update, but with no fields for update provided", async () => {
+  it("Update user, but with no fields for update provided", async () => {
     const nonExistingId = getFakeUserId();
 
     await agent
@@ -135,14 +135,14 @@ describe("CRUD Controller: /user", () => {
       });
   });
 
-  it("Delete", async () => {
+  it("Delete user", async () => {
     await agent.delete(`/user/${id}`).then((res) => {
       expect(res.status).toBe(200);
       expect(res.body.id).toBe(id);
     });
   });
 
-  it("Delete, but not found", async () => {
+  it("Delete user, but entity not found", async () => {
     const nonExistingId = getFakeUserId();
 
     await agent.delete(`/user/${nonExistingId}`).then((res) => {
@@ -150,7 +150,7 @@ describe("CRUD Controller: /user", () => {
     });
   });
 
-  it("Read all, but this time empty collection", async () => {
+  it("Get all users, but this time empty collection", async () => {
     await agent.get("/user").then((res) => {
       expect(res.status).toBe(200);
       expect(res.body).toHaveLength(0);

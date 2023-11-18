@@ -4,7 +4,7 @@ import { extractPaginationDetails } from "../common/controllers";
 import { NotFoundError } from "../exceptions/NotFoundError";
 import { DI } from "../server";
 import { Rental, RentalModel } from "../model/Rental";
-import { ByType, ByTypeAndSortKey } from "../database/DatabaseActionsProvider";
+import { ByType, ByTypeAndSortKey, Index } from "../database/DatabaseActionsProvider";
 
 const router = Router();
 
@@ -27,7 +27,7 @@ router.post("/:userId/:bookId", async (req: Request<{ userId: string; bookId: st
 router.get("/", async (req: Request, res: Response) => {
   const pagination = extractPaginationDetails(req);
 
-  const collection = await DI.database.actions.queryWithIndex(ByType("Rental"), pagination);
+  const collection = await DI.database.actions.query(ByType("Rental"), Index.TYPE, pagination);
 
   res.json(collection.map((entity) => Rental.fromModel(entity as RentalModel).toMapping()));
 });
@@ -38,7 +38,11 @@ router.get("/:userId", async (req: Request<{ userId: string }>, res: Response) =
   const userId = req.params.userId;
   const pagination = extractPaginationDetails(req);
 
-  const collection = await DI.database.actions.queryWithIndex(ByTypeAndSortKey("Rental", `User#${userId}`), pagination);
+  const collection = await DI.database.actions.query(
+    ByTypeAndSortKey("Rental", `User#${userId}`),
+    Index.TYPE,
+    pagination,
+  );
 
   res.json(collection.map((entity) => Rental.fromModel(entity as RentalModel).toMapping()));
 });
