@@ -12,7 +12,7 @@ const router = Router();
 
 router.post("/", async (req: Request, res: Response) => {
   const payload = req.body;
-  const mapper = User.fromPayload(payload);
+  const mapper = User.fromPayloadForCreate(payload);
 
   const result = await DI.database.actions.put(mapper.toModel());
 
@@ -25,10 +25,6 @@ router.get("/", async (req: Request, res: Response) => {
   const pagination = extractPaginationDetails(req);
 
   const collection = await DI.database.actions.queryWithIndex(ByType("User"), pagination);
-
-  if (!collection) {
-    throw new NotFoundError("User");
-  }
 
   res.json(collection.map((entity) => User.fromModel(entity as UserModel).toMapping()));
 });

@@ -8,7 +8,7 @@ describe("CRUD Controller: /book", () => {
   const agent = getAgent();
 
   let bookId: string = "";
-  const book = getFakeBook();
+  const book: { title: string; isbn: string; status?: BookStatus } = getFakeBook();
   const authorId = getFakeAuthorId();
 
   it("Verifying validation during creation", async () => {
@@ -72,6 +72,14 @@ describe("CRUD Controller: /book", () => {
     });
   });
 
+  it("Read, but not found", async () => {
+    const nonExistingAuthorId = getFakeAuthorId();
+
+    await agent.get(`/book/${nonExistingAuthorId}/${bookId}`).then((res) => {
+      expect(res.status).toBe(404);
+    });
+  });
+
   it("Update", async () => {
     const bookUpdate = {
       title: "Yet Another Changed Title",
@@ -89,6 +97,52 @@ describe("CRUD Controller: /book", () => {
         expect(res.body.title).toBe(bookUpdate.title);
         expect(res.body.isbn).toBe(bookUpdate.isbn);
         expect(res.body.status).toBe(BookStatus.MISSING);
+
+        book.title = bookUpdate.title;
+        book.isbn = bookUpdate.isbn;
+        book.status = BookStatus.MISSING;
+      });
+  });
+
+  it("Update, but not all fields", async () => {
+    const bookUpdate = {
+      title: "Yet Another Changed Title",
+    };
+
+    await agent
+      .put(`/book/${authorId}/${bookId}`)
+      .send(bookUpdate)
+      .then((res) => {
+        expect(res.status).toBe(200);
+        expect(res.body.bookId).toBe(bookId);
+        expect(res.body.authorId).toBe(authorId);
+        expect(res.body.title).toBe(bookUpdate.title);
+        expect(res.body.isbn).toBe(book.isbn);
+        expect(res.body.status).toBe(book.status);
+
+        book.title = bookUpdate.title;
+      });
+  });
+
+  it("Update, but not found", async () => {
+    const nonExistingAuthorId = getFakeAuthorId();
+
+    await agent
+      .put(`/book/${nonExistingAuthorId}/${bookId}`)
+      .send({ title: "Testing Title" })
+      .then((res) => {
+        expect(res.status).toBe(404);
+      });
+  });
+
+  it("Update, but with no fields for update provided", async () => {
+    const nonExistingAuthorId = getFakeAuthorId();
+
+    await agent
+      .put(`/book/${nonExistingAuthorId}/${bookId}`)
+      .send({})
+      .then((res) => {
+        expect(res.status).toBe(400);
       });
   });
 
@@ -97,6 +151,14 @@ describe("CRUD Controller: /book", () => {
       expect(res.status).toBe(200);
       expect(res.body.bookId).toBe(bookId);
       expect(res.body.authorId).toBe(authorId);
+    });
+  });
+
+  it("Delete, but not found", async () => {
+    const nonExistingAuthorId = getFakeAuthorId();
+
+    await agent.delete(`/book/${nonExistingAuthorId}/${bookId}`).then((res) => {
+      expect(res.status).toBe(404);
     });
   });
 

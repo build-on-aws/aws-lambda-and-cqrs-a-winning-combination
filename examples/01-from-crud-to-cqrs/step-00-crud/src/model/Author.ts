@@ -6,29 +6,29 @@ import { FieldsToUpdate } from "../database/DatabaseActionsProvider";
 
 type AuthorPayload = {
   id?: string;
-  name: string;
-  birthdate: string;
+  name?: string;
+  birthdate?: string;
   createdAt?: string;
   updatedAt?: string;
 };
 
 export type AuthorModel = BaseModel & {
-  name: string;
-  birthdate: string;
+  name?: string;
+  birthdate?: string;
 };
 
 export class Author implements IMapper<AuthorPayload, AuthorModel> {
   private readonly id: KSUID;
-  private readonly name: string;
-  private readonly birthdate: Date;
+  private readonly name?: string;
+  private readonly birthdate?: Date;
 
   protected constructor(payload: AuthorPayload) {
     this.id = payload.id ? KSUID.parse(payload.id) : KSUID.randomSync();
-    this.name = payload.name;
-    this.birthdate = moment(payload.birthdate).toDate();
+    this.name = payload.name ?? undefined;
+    this.birthdate = payload.birthdate ? moment(payload.birthdate).toDate() : undefined;
   }
 
-  static fromPayload(payload: AuthorPayload) {
+  static fromPayloadForCreate(payload: AuthorPayload) {
     if (!payload.name) {
       throw new MappingValidationError("Field `name` is required and should be a non-empty string");
     }
@@ -72,11 +72,7 @@ export class Author implements IMapper<AuthorPayload, AuthorModel> {
       throw new MappingValidationError("The provided ID must be a valid KSUID");
     }
 
-    return new Author({
-      id,
-      name: "",
-      birthdate: "",
-    });
+    return new Author({ id });
   }
 
   static fromModel(model: AuthorModel) {
@@ -113,7 +109,7 @@ export class Author implements IMapper<AuthorPayload, AuthorModel> {
       ...this.toKey(),
       type: Author.name,
       name: this.name,
-      birthdate: moment(this.birthdate).toISOString(),
+      birthdate: this.birthdate ? moment(this.birthdate).toISOString() : undefined,
       createdAt: moment().toISOString(),
       updatedAt: moment().toISOString(),
     };

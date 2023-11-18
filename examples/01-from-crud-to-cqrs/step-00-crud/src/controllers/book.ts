@@ -13,7 +13,7 @@ const router = Router();
 router.post("/:authorId", async (req: Request<{ authorId: string }>, res: Response) => {
   const authorId = req.params.authorId;
   const payload = req.body;
-  const mapper = Book.fromPayload(authorId, payload);
+  const mapper = Book.fromPayloadForCreate(authorId, payload);
 
   const result = await DI.database.actions.put(mapper.toModel());
 
@@ -26,10 +26,6 @@ router.get("/", async (req: Request, res: Response) => {
   const pagination = extractPaginationDetails(req);
 
   const collection = await DI.database.actions.queryWithIndex(ByType("Book"), pagination);
-
-  if (!collection) {
-    throw new NotFoundError("Book");
-  }
 
   res.json(collection.map((entity) => Book.fromModel(entity as BookModel).toMapping()));
 });
@@ -44,10 +40,6 @@ router.get("/:authorId", async (req: Request<{ authorId: string }>, res: Respons
     ByTypeAndSortKey("Book", `Author#${authorId}`),
     pagination,
   );
-
-  if (!collection) {
-    throw new NotFoundError("Book");
-  }
 
   res.json(collection.map((entity) => Book.fromModel(entity as BookModel).toMapping()));
 });

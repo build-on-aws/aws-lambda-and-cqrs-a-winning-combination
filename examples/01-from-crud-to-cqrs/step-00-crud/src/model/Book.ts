@@ -7,8 +7,8 @@ import { FieldsToUpdate } from "../database/DatabaseActionsProvider";
 type BookPayload = {
   bookId?: string;
   authorId?: string;
-  title: string;
-  isbn: string;
+  title?: string;
+  isbn?: string;
   status?: string;
   createdAt?: string;
   updatedAt?: string;
@@ -21,9 +21,9 @@ export enum BookStatus {
 }
 
 export type BookModel = BaseModel & {
-  title: string;
-  isbn: string;
-  status: string;
+  title?: string;
+  isbn?: string;
+  status?: string;
 };
 
 type EmptyBookMapping = {
@@ -34,19 +34,19 @@ type EmptyBookMapping = {
 export class Book implements IMapper<BookPayload, BookModel, EmptyBookMapping> {
   private readonly bookId: KSUID;
   private readonly authorId: KSUID;
-  private readonly title: string;
-  private readonly isbn: string;
-  private readonly status: BookStatus;
+  private readonly title?: string;
+  private readonly isbn?: string;
+  private readonly status?: BookStatus;
 
   protected constructor(payload: BookPayload) {
     this.bookId = payload.bookId ? KSUID.parse(payload.bookId) : KSUID.randomSync();
     this.authorId = payload.authorId ? KSUID.parse(payload.authorId) : KSUID.randomSync();
-    this.title = payload.title;
-    this.isbn = payload.isbn;
-    this.status = BookStatus[(payload.status ?? BookStatus.NOT_AVAILABLE) as keyof typeof BookStatus];
+    this.title = payload.title ?? undefined;
+    this.isbn = payload.isbn ?? undefined;
+    this.status = payload.status ? BookStatus[payload.status as keyof typeof BookStatus] : undefined;
   }
 
-  static fromPayload(authorId: string, payload: BookPayload) {
+  static fromPayloadForCreate(authorId: string, payload: BookPayload) {
     try {
       KSUID.parse(authorId);
     } catch (error: any) {
@@ -60,6 +60,8 @@ export class Book implements IMapper<BookPayload, BookModel, EmptyBookMapping> {
     if (!payload.isbn) {
       throw new MappingValidationError("Field `isbn` is required and should be a non-empty string");
     }
+
+    payload.status = BookStatus.NOT_AVAILABLE;
 
     return new Book({
       authorId,
@@ -108,13 +110,7 @@ export class Book implements IMapper<BookPayload, BookModel, EmptyBookMapping> {
       throw new MappingValidationError("The provided ID must be a valid KSUID");
     }
 
-    return new Book({
-      bookId,
-      authorId,
-      title: "",
-      isbn: "",
-      status: BookStatus.NOT_AVAILABLE,
-    });
+    return new Book({ bookId, authorId });
   }
 
   static fromModel(model: BookModel) {

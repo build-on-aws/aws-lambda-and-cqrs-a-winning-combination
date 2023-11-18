@@ -6,8 +6,8 @@ import { FieldsToUpdate } from "../database/DatabaseActionsProvider";
 
 type UserPayload = {
   id?: string;
-  name: string;
-  email: string;
+  name?: string;
+  email?: string;
   status?: string;
   comment?: string;
   createdAt?: string;
@@ -21,28 +21,28 @@ export enum UserStatus {
 }
 
 export type UserModel = BaseModel & {
-  name: string;
-  email: string;
-  status: string;
-  comment: string;
+  name?: string;
+  email?: string;
+  status?: string;
+  comment?: string;
 };
 
 export class User implements IMapper<UserPayload, UserModel> {
   private readonly id: KSUID;
-  private readonly name: string;
-  private readonly email: string;
-  private readonly status: UserStatus;
-  private readonly comment: string;
+  private readonly name?: string;
+  private readonly email?: string;
+  private readonly status?: UserStatus;
+  private readonly comment?: string;
 
   protected constructor(payload: UserPayload) {
     this.id = payload.id ? KSUID.parse(payload.id) : KSUID.randomSync();
-    this.name = payload.name;
-    this.email = payload.email;
-    this.status = UserStatus[(payload.status ?? UserStatus.NOT_VERIFIED) as keyof typeof UserStatus];
-    this.comment = payload.comment ?? "";
+    this.name = payload.name ?? undefined;
+    this.email = payload.email ?? undefined;
+    this.status = payload.status ? UserStatus[payload.status as keyof typeof UserStatus] : undefined;
+    this.comment = payload.comment ?? undefined;
   }
 
-  static fromPayload(payload: UserPayload) {
+  static fromPayloadForCreate(payload: UserPayload) {
     if (!payload.name) {
       throw new MappingValidationError("Field `name` is required and should be a non-empty string");
     }
@@ -50,6 +50,9 @@ export class User implements IMapper<UserPayload, UserModel> {
     if (!payload.email) {
       throw new MappingValidationError("Field `email` is required and should be a non-empty string");
     }
+
+    payload.status = UserStatus.NOT_VERIFIED;
+    payload.comment = "";
 
     return new User(payload);
   }
@@ -86,11 +89,7 @@ export class User implements IMapper<UserPayload, UserModel> {
       throw new MappingValidationError("The provided ID must be a valid KSUID");
     }
 
-    return new User({
-      id,
-      name: "",
-      email: "",
-    });
+    return new User({ id });
   }
 
   static fromModel(model: UserModel) {

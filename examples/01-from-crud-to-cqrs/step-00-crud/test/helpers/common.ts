@@ -30,6 +30,10 @@ export const getFakeAuthor = () => {
   };
 };
 
+export const getFakeUserId = () => {
+  return getFakeId();
+};
+
 export const getFakeUser = () => {
   return {
     name: "James Doe",
@@ -39,7 +43,7 @@ export const getFakeUser = () => {
 
 export const getFakeUserWithId = () => {
   return {
-    id: getFakeId(),
+    id: getFakeUserId(),
     ...getFakeUser(),
   };
 };

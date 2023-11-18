@@ -2,6 +2,7 @@ import moment from "moment";
 import { DynamoDBDocument } from "@aws-sdk/lib-dynamodb";
 import { LibrarySystemDatabase } from "./LibrarySystemDatabase";
 import { BaseModel, PrimaryKey } from "../model/base";
+import { NoFieldsToUpdate } from "../exceptions/NoFieldsToUpdate";
 
 type MarshalledPrimaryKey = {
   resourceId: { S: string };
@@ -48,20 +49,18 @@ export class DatabaseActionsProvider {
     this.table = table;
   }
 
-  // TODO: WRAP SDK RESPONSES IN NICE OBJECTS AND ADD ERROR HANDLING
-
   async put(item: BaseModel) {
     item.createdAt = moment().toISOString();
 
-    const result = await this.client.put({
-      TableName: this.table.getTableName(),
-      Item: item,
-    });
+    try {
+      await this.client.put({
+        TableName: this.table.getTableName(),
+        Item: item,
+      });
 
-    if (result.$metadata.httpStatusCode !== 200) {
-      return null;
-    } else {
       return item;
+    } catch (error: any) {
+      return null;
     }
   }
 
@@ -77,7 +76,7 @@ export class DatabaseActionsProvider {
       ...pagination,
     });
 
-    return result.Items;
+    return result.Items ?? [];
   }
 
   async get(key: PrimaryKey) {
@@ -90,6 +89,10 @@ export class DatabaseActionsProvider {
   }
 
   async update(key: PrimaryKey, update: FieldsToUpdate) {
+    if (Object.keys(update).length === 0) {
+      throw new NoFieldsToUpdate("No Fields To Update");
+    }
+
     const { names, values } = this.prepareNamesAndValues(update);
 
     if (Object.keys(update).length > 0) {
@@ -105,29 +108,40 @@ export class DatabaseActionsProvider {
       .map((pair) => pair.join(" = "))
       .join(", ");
 
-    const result = await this.client.update({
-      TableName: this.table.getTableName(),
-      Key: key,
-      UpdateExpression: `SET ${updateExpression}`,
-      ExpressionAttributeNames: names,
-      ExpressionAttributeValues: values,
-      ReturnValues: "ALL_NEW",
-    });
+    try {
+      const result = await this.client.update({
+        TableName: this.table.getTableName(),
+        Key: key,
+        UpdateExpression: `SET ${updateExpression}`,
+        ExpressionAttributeNames: names,
+        ExpressionAttributeValues: values,
+        ReturnValues: "ALL_NEW",
+        ConditionExpression: "attribute_exists(resourceId) AND attribute_exists(subResourceId)",
+      });
 
-    return result.Attributes;
+      return result.Attributes;
+    } catch (error: any) {
+      return null;
+    }
   }
 
   async delete(key: PrimaryKey) {
-    const result = await this.client.delete({
-      TableName: this.table.getTableName(),
-      Key: key,
-    });
-
-    if (result.$metadata.httpStatusCode !== 200) {
+    try {
+      await this.client.delete({
+        TableName: this.table.getTableName(),
+        Key: key,
+        Expected: {
+          resourceId: {
+            Value: key.resourceId,
+            Exists: true,
+          },
+        },
+      });
+    } catch (error: any) {
       return null;
-    } else {
-      return key;
     }
+
+    return key;
   }
 
   private prepareNamesAndValues(parameters: FieldsToUpdate): { names: Dict; values: Dict } {

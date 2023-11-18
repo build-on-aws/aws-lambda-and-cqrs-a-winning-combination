@@ -15,7 +15,7 @@ router.post("/:userId/:bookId", async (req: Request<{ userId: string; bookId: st
   const bookId = req.params.bookId;
   const payload = req.body;
 
-  const mapper = Rental.fromPayload(bookId, userId, payload);
+  const mapper = Rental.fromPayloadForCreate(bookId, userId, payload);
 
   const result = await DI.database.actions.put(mapper.toModel());
 
@@ -29,10 +29,6 @@ router.get("/", async (req: Request, res: Response) => {
 
   const collection = await DI.database.actions.queryWithIndex(ByType("Rental"), pagination);
 
-  if (!collection) {
-    throw new NotFoundError("Rental");
-  }
-
   res.json(collection.map((entity) => Rental.fromModel(entity as RentalModel).toMapping()));
 });
 
@@ -43,10 +39,6 @@ router.get("/:userId", async (req: Request<{ userId: string }>, res: Response) =
   const pagination = extractPaginationDetails(req);
 
   const collection = await DI.database.actions.queryWithIndex(ByTypeAndSortKey("Rental", `User#${userId}`), pagination);
-
-  if (!collection) {
-    throw new NotFoundError("Rental");
-  }
 
   res.json(collection.map((entity) => Rental.fromModel(entity as RentalModel).toMapping()));
 });
@@ -73,7 +65,7 @@ router.put("/:userId/:bookId", async (req: Request<{ userId: string; bookId: str
   const userId = req.params.userId;
   const bookId = req.params.bookId;
   const payload = req.body;
-  const mapper = Rental.fromPayload(bookId, userId, payload);
+  const mapper = Rental.fromPayloadForUpdate(bookId, userId, payload);
 
   const result = await DI.database.actions.update(mapper.toKey(), mapper.toUpdate());
 

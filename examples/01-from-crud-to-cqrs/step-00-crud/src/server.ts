@@ -49,7 +49,7 @@ export const init = (async () => {
 
     res.setHeader("Content-Type", "application/json");
 
-    if (error.name === "MappingValidationError") {
+    if (error.name === "MappingValidationError" || error.name === "NoFieldsToUpdate") {
       res.status(400).json({ message: `Validation Error: '${error.message}'` });
     } else if (error.name === "NotFoundError") {
       res.status(404).json({ message: `Entity Not Found: ${error.message}` });

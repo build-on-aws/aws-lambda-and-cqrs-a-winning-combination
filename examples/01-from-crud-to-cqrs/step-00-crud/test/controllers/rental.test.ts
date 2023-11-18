@@ -1,5 +1,5 @@
 import { RentalStatus } from "../../src/model/Rental";
-import { getAgent, getFakeBookId, getFakeUserWithId, start, stop } from "../helpers/common";
+import { getAgent, getFakeBookId, getFakeUserId, getFakeUserWithId, start, stop } from "../helpers/common";
 
 describe("CRUD Controller: /rental", () => {
   beforeAll(start);
@@ -9,6 +9,7 @@ describe("CRUD Controller: /rental", () => {
 
   const user = getFakeUserWithId();
   const bookId = getFakeBookId();
+  const rental: { status?: RentalStatus; comment?: string } = {};
 
   it("Create", async () => {
     await agent
@@ -56,6 +57,14 @@ describe("CRUD Controller: /rental", () => {
     });
   });
 
+  it("Read, but not found", async () => {
+    const nonExistingUserId = getFakeUserId();
+
+    await agent.get(`/rental/${nonExistingUserId}/${bookId}`).then((res) => {
+      expect(res.status).toBe(404);
+    });
+  });
+
   it("Update", async () => {
     const rentalUpdate = {
       status: "RETURNED",
@@ -71,6 +80,50 @@ describe("CRUD Controller: /rental", () => {
         expect(res.body.bookId).toBe(bookId);
         expect(res.body.status).toBe(RentalStatus.RETURNED);
         expect(res.body.comment).toBe(rentalUpdate.comment);
+
+        rental.status = RentalStatus.RETURNED;
+        rental.comment = rentalUpdate.comment;
+      });
+  });
+
+  it("Update, but not all fields", async () => {
+    const rentalUpdate = {
+      comment: "This is a comment",
+    };
+
+    await agent
+      .put(`/rental/${user.id}/${bookId}`)
+      .send(rentalUpdate)
+      .then((res) => {
+        expect(res.status).toBe(200);
+        expect(res.body.userId).toBe(user.id);
+        expect(res.body.bookId).toBe(bookId);
+        expect(res.body.status).toBe(RentalStatus.RETURNED);
+        expect(res.body.comment).toBe(rentalUpdate.comment);
+
+        rental.comment = rentalUpdate.comment;
+      });
+  });
+
+  it("Update, but not found", async () => {
+    const nonExistingUserId = getFakeUserId();
+
+    await agent
+      .put(`/rental/${nonExistingUserId}/${bookId}`)
+      .send({ comment: "Testing comment." })
+      .then((res) => {
+        expect(res.status).toBe(404);
+      });
+  });
+
+  it("Update, but with no fields for update provided", async () => {
+    const nonExistingUserId = getFakeUserId();
+
+    await agent
+      .put(`/rental/${nonExistingUserId}/${bookId}`)
+      .send({})
+      .then((res) => {
+        expect(res.status).toBe(400);
       });
   });
 
@@ -79,6 +132,14 @@ describe("CRUD Controller: /rental", () => {
       expect(res.status).toBe(200);
       expect(res.body.userId).toBe(user.id);
       expect(res.body.bookId).toBe(bookId);
+    });
+  });
+
+  it("Delete, but not found", async () => {
+    const nonExistingUserId = getFakeUserId();
+
+    await agent.delete(`/rental/${nonExistingUserId}/${bookId}`).then((res) => {
+      expect(res.status).toBe(404);
     });
   });
 

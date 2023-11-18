@@ -1,4 +1,4 @@
-import { getAgent, getFakeAuthor, start, stop } from "../helpers/common";
+import { getAgent, getFakeAuthor, getFakeAuthorId, start, stop } from "../helpers/common";
 
 describe("CRUD Controller: /author", () => {
   beforeAll(start);
@@ -52,18 +52,71 @@ describe("CRUD Controller: /author", () => {
     });
   });
 
+  it("Read, but not found", async () => {
+    const nonExistingId = getFakeAuthorId();
+
+    await agent.get(`/author/${nonExistingId}`).then((res) => {
+      expect(res.status).toBe(404);
+    });
+  });
+
   it("Update", async () => {
-    author.name = "Jane Doe";
-    author.birthdate = "1980-02-16T11:11:11.000Z";
+    const updatedAuthor = {
+      name: "Jane Doe",
+      birthdate: "1980-02-16T11:11:11.000Z",
+    };
 
     await agent
       .put(`/author/${id}`)
-      .send(author)
+      .send(updatedAuthor)
       .then((res) => {
         expect(res.status).toBe(200);
         expect(res.body.id).toBe(id);
-        expect(res.body.name).toBe(author.name);
+        expect(res.body.name).toBe(updatedAuthor.name);
+        expect(res.body.birthdate).toBe(updatedAuthor.birthdate);
+
+        author.name = updatedAuthor.name;
+        author.birthdate = updatedAuthor.birthdate;
+      });
+  });
+
+  it("Update, but not all fields", async () => {
+    const updatedAuthor = {
+      name: "Jane Doe",
+    };
+
+    await agent
+      .put(`/author/${id}`)
+      .send(updatedAuthor)
+      .then((res) => {
+        expect(res.status).toBe(200);
+        expect(res.body.id).toBe(id);
+        expect(res.body.name).toBe(updatedAuthor.name);
         expect(res.body.birthdate).toBe(author.birthdate);
+
+        author.name = updatedAuthor.name;
+      });
+  });
+
+  it("Update, but not found", async () => {
+    const nonExistingId = getFakeAuthorId();
+
+    await agent
+      .put(`/author/${nonExistingId}`)
+      .send({ name: "John Test" })
+      .then((res) => {
+        expect(res.status).toBe(404);
+      });
+  });
+
+  it("Update, but with no fields for update provided", async () => {
+    const nonExistingId = getFakeAuthorId();
+
+    await agent
+      .put(`/author/${nonExistingId}`)
+      .send({})
+      .then((res) => {
+        expect(res.status).toBe(400);
       });
   });
 
@@ -71,6 +124,14 @@ describe("CRUD Controller: /author", () => {
     await agent.delete(`/author/${id}`).then((res) => {
       expect(res.status).toBe(200);
       expect(res.body.id).toBe(id);
+    });
+  });
+
+  it("Delete, but not found", async () => {
+    const nonExistingId = getFakeAuthorId();
+
+    await agent.delete(`/author/${nonExistingId}`).then((res) => {
+      expect(res.status).toBe(404);
     });
   });
 
