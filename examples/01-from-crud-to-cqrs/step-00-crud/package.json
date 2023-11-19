@@ -38,7 +38,7 @@
     "lint": "npx eslint .",
     "build": "npx tsc",
     "test": "jest --runInBand --silent",
-    "development": "npm run lint && npm run build && npm run test",
+    "development": "npm run build && npm run lint && npm run test",
     "start": "node dist/src/server.js",
     "create-database": "npx ts-node src/database-script.ts create-database",
     "destroy-database": "npx ts-node src/database-script.ts destroy-database"

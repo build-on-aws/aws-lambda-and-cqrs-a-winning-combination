@@ -68,6 +68,8 @@ Resources:
         #
         # - AttributeName: name
         #   AttributeType: S
+        # - AttributeName: birthdate
+        #   AttributeType: S
         # - AttributeName: email
         #   AttributeType: S
         # - AttributeName: birthdate
@@ -125,15 +127,18 @@ Resources:
         Target: es2020
         Sourcemap: true
         EntryPoints:
-          - src/handler.ts
+          - src/entrypoint.ts
     Properties:
       CodeUri: library/
-      Handler: handler.main
+      Handler: entrypoint.main
       Runtime: nodejs20.x
       Architectures:
         - x86_64
       Environment:
         Variables:
+          POWERTOOLS_SERVICE_NAME: monolithic-dispatcher
+          POWERTOOLS_METRICS_NAMESPACE: library-system/approach-00
+          POWERTOOLS_LOG_LEVEL: INFO
           DYNAMODB_TABLE_NAME: !Ref LibrarySystemDatabase
       Policies:
         - Statement:
@@ -155,99 +160,48 @@ Resources:
               - !GetAtt LibrarySystemDatabase.Arn
               - !Sub "${LibrarySystemDatabase.Arn}/index/entity-type"
       Events:
-        # CRUD API for Authors.
-        CreateAuthor:
+        AddNewBookCommand:
           Type: Api
           Properties:
             RestApiId: !Ref LibrarySystemAPI
-            Path: /author
+            Path: /book/new
             Method: POST
-        GetAllAuthors:
+        BorrowBookCommand:
           Type: Api
           Properties:
             RestApiId: !Ref LibrarySystemAPI
-            Path: /author
-            Method: GET
-        GetAuthorById:
-          Type: Api
-          Properties:
-            RestApiId: !Ref LibrarySystemAPI
-            Path: /author/{id}
-            Method: GET
-        UpdateAuthor:
-          Type: Api
-          Properties:
-            RestApiId: !Ref LibrarySystemAPI
-            Path: /author/{id}
-            Method: PUT
-        DeleteAuthor:
-          Type: Api
-          Properties:
-            RestApiId: !Ref LibrarySystemAPI
-            Path: /author/{id}
-            Method: DELETE
-        # CRUD API for Users.
-        CreateUser:
-          Type: Api
-          Properties:
-            RestApiId: !Ref LibrarySystemAPI
-            Path: /user
+            Path: /book/{bookId}/borrow/{userId}
             Method: POST
-        GetAllUsers:
+        ReportBookAsMissingCommand:
           Type: Api
           Properties:
             RestApiId: !Ref LibrarySystemAPI
-            Path: /user
-            Method: GET
-        GetUserById:
-          Type: Api
-          Properties:
-            RestApiId: !Ref LibrarySystemAPI
-            Path: /user/{id}
-            Method: GET
-        UpdateUser:
-          Type: Api
-          Properties:
-            RestApiId: !Ref LibrarySystemAPI
-            Path: /user/{id}
-            Method: PUT
-        DeleteUser:
-          Type: Api
-          Properties:
-            RestApiId: !Ref LibrarySystemAPI
-            Path: /user/{id}
-            Method: DELETE
-        # CRUD API for Books.
-        CreateBook:
-          Type: Api
-          Properties:
-            RestApiId: !Ref LibrarySystemAPI
-            Path: /book
+            Path: /book/{bookId}/missing/{userId}
             Method: POST
-        GetAllBooks:
+        GetBooksByAuthorQuery:
+          Type: Api
+          Properties:
+            RestApiId: !Ref LibrarySystemAPI
+            Path: /book/by-author/{authorId}
+            Method: GET
+        GetBorrowedBooksForUserQuery:
+          Type: Api
+          Properties:
+            RestApiId: !Ref LibrarySystemAPI
+            Path: /book/by-user/{userId}
+            Method: GET
+            RequestParameters:
+              - method.request.querystring.status:
+                  Required: true
+        GetMissingBooksQuery:
           Type: Api
           Properties:
             RestApiId: !Ref LibrarySystemAPI
             Path: /book
             Method: GET
-        GetBookById:
-          Type: Api
-          Properties:
-            RestApiId: !Ref LibrarySystemAPI
-            Path: /book/{id}
-            Method: GET
-        UpdateBook:
-          Type: Api
-          Properties:
-            RestApiId: !Ref LibrarySystemAPI
-            Path: /book/{id}
-            Method: PUT
-        DeleteBook:
-          Type: Api
-          Properties:
-            RestApiId: !Ref LibrarySystemAPI
-            Path: /book/{id}
-            Method: DELETE
+            RequestParameters:
+              - method.request.querystring.status:
+                  Required: true
 
   ApplicationResourceGroup:
     Type: AWS::ResourceGroups::Group

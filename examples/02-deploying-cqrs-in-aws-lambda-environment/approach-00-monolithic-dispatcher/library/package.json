@@ -26,12 +26,14 @@
     "@aws-lambda-powertools/metrics": "~1.15.0",
     "@aws-lambda-powertools/tracer": "~1.15.0",
     "@middy/core": "~4.7.0",
-    "esbuild": "~0.14.14"
+    "esbuild": "~0.14.14",
+    "ksuid": "~3.0.0",
+    "moment": "~2.29.4"
   },
   "scripts": {
     "lint": "npx eslint .",
     "build": "npx tsc",
     "test": "jest --runInBand --silent",
-    "development": "npm run lint && npm run build && npm run test"
+    "development": "npm run build && npm run lint && npm run test"
   }
 }

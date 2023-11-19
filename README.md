@@ -95,6 +95,8 @@ Application have 4 entities:
 - `User` with `email`, `name`, `status`, and `comment` fields
   - `comment` is a relevant annotation for the `status` field.
 
+Additionally, each entity has additional metadata fields - `type` (that contains entity name), and pair `createdAt` and `updatedAt`, that represents creation and last modification timestamps.
+
 All identifiers used by the described entities are in the [KSUID](https://github.com/segmentio/ksuid#what-is-a-ksuid) format. It stands for _K-Sortable Unique IDentifier_, and it is a kind of globally unique identifier similar to a _UUID_, but built from the ground-up to be _"naturally"_ (better term is _lexically_) sorted by generation timestamp without any special type-aware logic.
 
 In terms of the *API*, it is very CRUD-oriented in this step:
@@ -135,7 +137,7 @@ As an example, you will need to implement just a subset of all available operati
 
 - Queries:
   - `GetBooksByAuthor` by given author identifier.
-  - `GetBorrowedBooksByUser` by given user identifier.
+  - `GetBorrowedBooksForUser` by given user identifier.
   - `GetMissingBooks` without any additional criteria.
 - Commands:
   - `AddNewBook`:
@@ -143,33 +145,36 @@ As an example, you will need to implement just a subset of all available operati
       - Input validation (if all the details allow for processing command) is done earlier.
     - Checking, if author exists.
       - If not, adding author.
-    - Adding book with that author, no borrower, and certain status.
+    - Adding book with that author and certain status.
   - `BorrowBook`:
     - Business validation of the provided book entity.
       - Input validation (if all the details allow for processing command) is done earlier.
     - Checking if a given book is available.
       - If not, returning error.
-    - Updating borrower.
-    - Updating book status.
-  - `ReportMissingBook`:
+    - Checking if a given user exists.
+      - If not, returning error.
+    - Adding rental entity with corresponding parameters.
+  - `ReportBookAsMissing`:
     - Business validation of the provided book entity.
       - Input validation (if all the details allow for processing command) is done earlier.
-    - Checking, if a given book is available.
+    - Checking, if a given book is not available.
+      - If not, returning error.
+    - Checking if a given user exists.
       - If not, returning error.
     - Update the given book status.
     - Block the user that borrowed this position, and add annotation in the status about the ID of the  missing book.
-    - Remove current borrower from the book.
+    - Remove current rental for that book and user.
 
 Here is how the new API will look like:
 
 ```text
 GET     /book/by-author/:authorId               Query  : `GetBooksByAuthor`
-GET     /book/by-user/:userId?status=borrowed   Query  : `GetBorrowedBooksByUser`
+GET     /book/by-user/:userId?status=borrowed   Query  : `GetBorrowedBooksForUser`
 GET     /book?status=missing                    Query  : `GetMissingBooks`
 
 POST    /book/new                               Command: `AddNewBook`
-POST    /book/:bookId/borrow                    Command: `BorrowBook`
-POST    /book/:bookId/missing                   Command: `ReportMissingBook`
+POST    /book/:bookId/borrow/:userId            Command: `BorrowBook`
+POST    /book/:bookId/missing/:userId           Command: `ReportMissingBook`
 ```
 
 #### Why do you want a refactor from CRUD to CQRS?
@@ -218,7 +223,7 @@ Last, but not least - extracting externalities allowed you to abstract away inte
 - [Martin Fowler on *CQRS*](https://martinfowler.com/bliki/CQRS.html)
 - [Oskar Dudycz on *CQRS* and *Event Sourcing*](https://event-driven.io/en/event_streaming_is_not_event_sourcing/)
 - [Oskar Dudycz on *CQRS* Myths](https://event-driven.io/en/cqrs_facts_and_myths_explained/)
-- [*CRUD* to *CQRS* example in .NET by Oskar Dudycz](https://github.com/oskardudycz/EventSourcing.NetCore/tree/main/Sample/CRUDToCQRS)
+- [*CRUD* to *CQRS* example in *.NET* by Oskar Dudycz](https://github.com/oskardudycz/EventSourcing.NetCore/tree/main/Sample/CRUDToCQRS)
 
 ## Security
 
