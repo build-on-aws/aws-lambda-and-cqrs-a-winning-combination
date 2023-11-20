@@ -23,15 +23,28 @@ Globals:
 Metadata:
 
   AWS::CloudFormation::Interface:
+
     ParameterGroups:
       - Label:
           default: "Software Development Life Cycle (SDLC)"
         Parameters:
           - Stage
 
+      - Label:
+          default: "Amazon DynamoDB"
+        Parameters:
+          - EntityTypeIndexName
+          - EntityStatusIndexName
+
     ParameterLabels:
       Stage:
         default: "Name of the software development life cycle (SDLC) stage into which we are deploying."
+
+      EntityTypeIndexName:
+        default: "Name of the GSI that allows to query by entity type and sort key."
+
+      EntityStatusIndexName:
+        default: "Name of the GSI that allows to query by entity type and status."
 
 Parameters:
 
@@ -43,6 +56,16 @@ Parameters:
       - test
       - prod
     Default: dev
+
+  EntityTypeIndexName:
+    Type: String
+    Description: Name of the GSI that allows to query by entity type in the Amazon DynamoDB table.
+    Default: "entity-type"
+
+  EntityStatusIndexName:
+    Type: String
+    Description: Name of the GSI that allows to query by the status of the entity in the Amazon DynamoDB table.
+    Default: "entity-status"
 
 Resources:
 
@@ -87,7 +110,7 @@ Resources:
         # - AttributeName: isbn
         #   AttributeType: S
       GlobalSecondaryIndexes:
-        - IndexName: entity-type
+        - IndexName: !Ref EntityTypeIndexName
           KeySchema:
             - AttributeName: type
               KeyType: HASH
@@ -97,7 +120,7 @@ Resources:
             ProjectionType: ALL
           ContributorInsightsSpecification:
             Enabled: true
-        - IndexName: entity-status
+        - IndexName: !Ref EntityStatusIndexName
           KeySchema:
             - AttributeName: type
               KeyType: HASH
@@ -152,7 +175,12 @@ Resources:
         - x86_64
       Environment:
         Variables:
+          POWERTOOLS_SERVICE_NAME: commands-dispatcher
+          POWERTOOLS_METRICS_NAMESPACE: library-system/approach-01
+          POWERTOOLS_LOG_LEVEL: INFO
           DYNAMODB_TABLE_NAME: !Ref LibrarySystemDatabase
+          DYNAMODB_GSI1_NAME: !Ref EntityTypeIndexName
+          DYNAMODB_GSI2_NAME: !Ref EntityStatusIndexName
       Policies:
         - Statement:
             - Effect: Allow
@@ -168,10 +196,8 @@ Resources:
             - Effect: Allow
               Action:
                 - "dynamodb:DescribeLimits"
-                - "dynamodb:Query"
               Resource:
                 - !GetAtt LibrarySystemDatabase.Arn
-                - !Sub "${LibrarySystemDatabase.Arn}/index/entity-type"
       Events:
         AddNewBookCommand:
           Type: Api
@@ -214,7 +240,12 @@ Resources:
         - x86_64
       Environment:
         Variables:
+          POWERTOOLS_SERVICE_NAME: queries-dispatcher
+          POWERTOOLS_METRICS_NAMESPACE: library-system/approach-01
+          POWERTOOLS_LOG_LEVEL: INFO
           DYNAMODB_TABLE_NAME: !Ref LibrarySystemDatabase
+          DYNAMODB_GSI1_NAME: !Ref EntityTypeIndexName
+          DYNAMODB_GSI2_NAME: !Ref EntityStatusIndexName
       Policies:
         - Statement:
             - Effect: Allow
@@ -230,7 +261,8 @@ Resources:
                 - "dynamodb:Query"
               Resource:
                 - !GetAtt LibrarySystemDatabase.Arn
-                - !Sub "${LibrarySystemDatabase.Arn}/index/entity-type"
+                - !Sub "${LibrarySystemDatabase.Arn}/index/${EntityTypeIndexName}"
+                - !Sub "${LibrarySystemDatabase.Arn}/index/${EntityStatusIndexName}"
       Events:
         GetBooksByAuthorQuery:
           Type: Api

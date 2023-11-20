@@ -21,15 +21,28 @@ Globals:
 Metadata:
 
   AWS::CloudFormation::Interface:
+
     ParameterGroups:
       - Label:
           default: "Software Development Life Cycle (SDLC)"
         Parameters:
           - Stage
 
+      - Label:
+          default: "Amazon DynamoDB"
+        Parameters:
+          - EntityTypeIndexName
+          - EntityStatusIndexName
+
     ParameterLabels:
       Stage:
         default: "Name of the software development life cycle (SDLC) stage into which we are deploying."
+
+      EntityTypeIndexName:
+        default: "Name of the GSI that allows to query by entity type and sort key."
+
+      EntityStatusIndexName:
+        default: "Name of the GSI that allows to query by entity type and status."
 
 Parameters:
 
@@ -44,12 +57,12 @@ Parameters:
 
   EntityTypeIndexName:
     Type: String
-    Description: Name of the GSI that allows to search by entity type in the Amazon DynamoDB table.
+    Description: Name of the GSI that allows to query by entity type in the Amazon DynamoDB table.
     Default: "entity-type"
 
   EntityStatusIndexName:
     Type: String
-    Description: Name of the GSI that allows to search by the status of the entity in the Amazon DynamoDB table.
+    Description: Name of the GSI that allows to query by the status of the entity in the Amazon DynamoDB table.
     Default: "entity-status"
 
 Resources:
