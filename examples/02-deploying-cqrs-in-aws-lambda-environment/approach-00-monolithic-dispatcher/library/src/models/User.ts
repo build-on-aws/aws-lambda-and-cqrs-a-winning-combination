@@ -19,6 +19,6 @@ export type UserUpdateModel = {
   comment?: string;
 };
 
-export type UserKey = {
+export type UserPrimaryKey = {
   id: string;
 };

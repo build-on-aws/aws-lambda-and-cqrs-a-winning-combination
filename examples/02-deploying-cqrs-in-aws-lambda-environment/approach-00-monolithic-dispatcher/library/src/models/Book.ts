@@ -1,5 +1,3 @@
-import { Author } from "./Author";
-
 export enum BookStatus {
   AVAILABLE = "AVAILABLE",
   NOT_AVAILABLE = "NOT_AVAILABLE",
@@ -14,19 +12,13 @@ export type Book = {
   status: BookStatus;
 };
 
-export type BookCreateModel = {
-  author: Author;
-  title: string;
-  isbn: string;
-};
-
 export type BookUpdateModel = {
   title?: string;
   isbn?: string;
   status?: BookStatus;
 };
 
-export type BookKey = {
+export type BookPrimaryKey = {
   bookId: string;
   authorId: string;
 };

@@ -1,9 +1,21 @@
-/* eslint @typescript-eslint/no-unused-vars: 0 */
-import { IRepository } from "./IRepository";
-import { Rental, RentalKey, RentalStatus, RentalUpdateModel } from "../models/Rental";
+import { IDatabaseProvider, Pair } from "../database/IDatabaseProvider";
+import { BaseRepository } from "./BaseRepository";
+import { Rental, RentalPrimaryKey, RentalUpdateModel } from "../models/Rental";
+import { ByTypeAndSortKey, ByTypeAndStatus, Index } from "../database/DatabaseProvider";
+import { PrimaryKey } from "../database/DatabaseEntities";
 
-export class RentalRepository implements IRepository<Rental, RentalUpdateModel, RentalKey> {
-  create(model: Rental): Rental {
+export class RentalRepository extends BaseRepository<Rental, RentalUpdateModel, RentalPrimaryKey> {
+  constructor(databaseProvider: IDatabaseProvider) {
+    super(databaseProvider);
+  }
+
+  async create(model: Rental): Promise<Rental> {
+    await this.databaseProvider.put({
+      ...this.getFormattedKey({ bookId: model.bookId, userId: model.userId }),
+      type: "Rental",
+      ...model,
+    });
+
     return {
       bookId: model.bookId,
       userId: model.userId,
@@ -12,36 +24,77 @@ export class RentalRepository implements IRepository<Rental, RentalUpdateModel, 
     };
   }
 
-  read(primaryKey: RentalKey): Rental {
+  async read(primaryKey: RentalPrimaryKey): Promise<Rental> {
+    const result = await this.databaseProvider.get(this.getFormattedKey(primaryKey));
+
     return {
       bookId: primaryKey.bookId,
       userId: primaryKey.userId,
-      status: RentalStatus.BORROWED,
-      comment: "",
+      status: result["status"],
+      comment: result["comment"],
     };
   }
 
-  update(primaryKey: Rental, model: RentalUpdateModel): Rental {
+  async update(primaryKey: RentalPrimaryKey, model: RentalUpdateModel): Promise<Rental> {
+    const fields: Pair[] = [];
+
+    if (model.status) {
+      fields.push({ name: "status", value: model.status });
+    }
+
+    if (model.comment) {
+      fields.push({ name: "comment", value: model.comment });
+    }
+
+    const result = await this.databaseProvider.update(this.getFormattedKey(primaryKey), fields);
+
     return {
       bookId: primaryKey.bookId,
       userId: primaryKey.userId,
-      status: model.status ?? RentalStatus.BORROWED,
-      comment: model.comment ?? "",
+      status: result["status"],
+      comment: result["comment"],
     };
   }
 
-  delete(primaryKey: RentalKey): RentalKey {
+  async delete(primaryKey: RentalPrimaryKey): Promise<RentalPrimaryKey> {
+    await this.databaseProvider.delete(this.getFormattedKey(primaryKey));
+
     return {
       bookId: primaryKey.bookId,
       userId: primaryKey.userId,
     };
   }
 
-  queryByTypeAndSortKey(entityName: string, sortKey: string): Rental[] {
-    return [];
+  async queryByTypeAndSortKey(entityName: string, sortKey: string): Promise<Rental[]> {
+    const collection = await this.databaseProvider.query(ByTypeAndSortKey(entityName, sortKey), Index.TYPE);
+
+    return collection.map((record) => {
+      return {
+        bookId: record["resourceId"].split("#")[1],
+        userId: record["subResourceId"].split("#")[1],
+        status: record["status"],
+        comment: record["comment"],
+      };
+    });
   }
 
-  queryByTypeAndStatus(entityName: string, status: string): Rental[] {
-    return [];
+  async queryByTypeAndStatus(entityName: string, status: string): Promise<Rental[]> {
+    const collection = await this.databaseProvider.query(ByTypeAndStatus(entityName, status), Index.STATUS);
+
+    return collection.map((record) => {
+      return {
+        bookId: record["resourceId"].split("#")[1],
+        userId: record["subResourceId"].split("#")[1],
+        status: record["status"],
+        comment: record["comment"],
+      };
+    });
+  }
+
+  protected getFormattedKey(primaryKey: RentalPrimaryKey): PrimaryKey {
+    return {
+      resourceId: `Book#${primaryKey.bookId}`,
+      subResourceId: `User#${primaryKey.userId}`,
+    };
   }
 }

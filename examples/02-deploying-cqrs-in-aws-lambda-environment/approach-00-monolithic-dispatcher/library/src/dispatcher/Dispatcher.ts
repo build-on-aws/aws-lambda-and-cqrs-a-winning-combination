@@ -1,3 +1,4 @@
+import { IDatabaseProvider } from "../database/IDatabaseProvider";
 import { RepositoriesFactory } from "../factories/RepositoriesFactory";
 import { QueryHandlersFactory } from "../factories/QueryHandlersFactory";
 import { CommandHandlersFactory } from "../factories/CommandHandlersFactory";
@@ -15,13 +16,13 @@ export class Dispatcher {
   private readonly context: DispatcherContext;
   private readonly repositoriesFactory: RepositoriesFactory;
 
-  protected constructor(context: DispatcherContext, repositoriesFactory: RepositoriesFactory) {
+  protected constructor(context: DispatcherContext, databaseProvider: IDatabaseProvider) {
     this.context = context;
-    this.repositoriesFactory = repositoriesFactory;
+    this.repositoriesFactory = new RepositoriesFactory(databaseProvider);
   }
 
-  static create(context: DispatcherContext, repositoriesFactory: RepositoriesFactory) {
-    return new Dispatcher(context, repositoriesFactory);
+  static create(context: DispatcherContext, databaseProvider: IDatabaseProvider) {
+    return new Dispatcher(context, databaseProvider);
   }
 
   dispatch() {

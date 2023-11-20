@@ -1,35 +1,39 @@
 import moment from "moment";
 import { ICommandHandler } from "./ICommandHandler";
-import { ReportMissingBookCommand } from "../../operations/commands";
-import { BorrowBookCommandResponse } from "../../responses";
-import { BookRepository, RentalRepository, UserRepository } from "../../repositories";
+import { BorrowBookCommand } from "../../operations/commands";
+import { BorrowBookCommandResponse } from "../../payloads/responses";
+import { RentalRepository, UserRepository } from "../../repositories";
 import { ArgumentError } from "../../exceptions/ArgumentError";
 import { RentalStatus } from "../../models/Rental";
 
-export class BorrowBookHandler implements ICommandHandler<ReportMissingBookCommand, BorrowBookCommandResponse> {
+export class BorrowBookHandler implements ICommandHandler<BorrowBookCommand, BorrowBookCommandResponse> {
   private readonly rentalRepository;
   private readonly userRepository;
-  private readonly bookRepository;
 
-  constructor(rentalRepository: RentalRepository, userRepository: UserRepository, bookRepository: BookRepository) {
+  constructor(rentalRepository: RentalRepository, userRepository: UserRepository) {
     this.rentalRepository = rentalRepository;
     this.userRepository = userRepository;
-    this.bookRepository = bookRepository;
   }
 
-  handle(operation: ReportMissingBookCommand): BorrowBookCommandResponse {
-    const rentals = this.rentalRepository.queryByTypeAndStatus("Rental", RentalStatus.BORROWED);
+  async handle(operation: BorrowBookCommand): Promise<BorrowBookCommandResponse> {
+    const bookId = operation.bookId;
+    const borrowerId = operation.borrowBookParameters.userId;
 
-    if (rentals.filter((rental) => rental.bookId === operation.bookId).length > 0) {
-      throw new ArgumentError(`Book is already borrowed: ${operation.bookId}`);
+    // Checking if a given user exists.
+    await this.userRepository.read({ id: borrowerId });
+
+    // Checking if a given book is not already borrowed.
+    const rentals = await this.rentalRepository.queryByTypeAndStatus("Rental", RentalStatus.BORROWED);
+
+    if (rentals.filter((rental) => rental.bookId === bookId).length > 0) {
+      throw new ArgumentError(`Book is already borrowed: ${bookId}`);
     }
 
-    const borrower = this.userRepository.read({ id: operation.userId });
-
-    const comment = `Borrowed by ${borrower.id} at ${moment().toISOString()}`;
+    // Performing an actual borrow.
+    const comment = `Borrowed by ${borrowerId} at ${moment().toISOString()}`;
     const status = RentalStatus.BORROWED;
-    this.rentalRepository.create({ bookId: operation.bookId, userId: operation.userId, status, comment });
+    await this.rentalRepository.create({ bookId, userId: borrowerId, status, comment });
 
-    return { success: true, bookId: operation.bookId, userId: borrower.id };
+    return { success: true, bookId, userId: borrowerId };
   }
 }

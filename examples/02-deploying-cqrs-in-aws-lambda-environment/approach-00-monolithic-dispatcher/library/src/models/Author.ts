@@ -9,6 +9,6 @@ export type AuthorUpdateModel = {
   birthdate?: string;
 };
 
-export type AuthorKey = {
+export type AuthorPrimaryKey = {
   id: string;
 };

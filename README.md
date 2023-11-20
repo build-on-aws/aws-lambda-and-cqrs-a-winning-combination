@@ -162,7 +162,7 @@ As an example, you will need to implement just a subset of all available operati
     - Checking if a given user exists.
       - If not, returning error.
     - Update the given book status.
-    - Block the user that borrowed this position, and add annotation in the status about the ID of the  missing book.
+    - Block the user that borrowed this position, and add annotation in the status about the ID of the missing book.
     - Remove current rental for that book and user.
 
 Here is how the new API will look like:
@@ -172,9 +172,9 @@ GET     /book/by-author/:authorId               Query  : `GetBooksByAuthor`
 GET     /book/by-user/:userId?status=borrowed   Query  : `GetBorrowedBooksForUser`
 GET     /book?status=missing                    Query  : `GetMissingBooks`
 
-POST    /book/new                               Command: `AddNewBook`
-POST    /book/:bookId/borrow/:userId            Command: `BorrowBook`
-POST    /book/:bookId/missing/:userId           Command: `ReportMissingBook`
+POST    /book/new                               Command: `AddNewBook`                Payload: { author: { id } | { name, birthdate }, title, isbn }
+POST    /book/:bookId/borrow                    Command: `BorrowBook`                Payload: { userId }
+POST    /book/:bookId/missing                   Command: `ReportMissingBook`         Payload: { userId, authorId }
 ```
 
 #### Why do you want a refactor from CRUD to CQRS?

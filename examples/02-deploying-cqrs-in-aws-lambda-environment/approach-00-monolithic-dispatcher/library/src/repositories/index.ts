@@ -1,4 +1,4 @@
-export * from "./IRepository";
+export * from "./BaseRepository";
 
 export * from "./AuthorRepository";
 export * from "./BookRepository";

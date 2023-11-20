@@ -1,15 +1,15 @@
 import { ICommand } from "./ICommand";
-import { BookCreateModel } from "../../models/Book";
+import { AddNewBookCommandRequest } from "../../payloads/requests";
 
 export class AddNewBookCommand extends ICommand {
-  public readonly book: BookCreateModel;
+  public readonly newBookParameters: AddNewBookCommandRequest;
 
   constructor(requestId: string, payload: string) {
     super(requestId);
 
     const parsedPayload = JSON.parse(payload);
 
-    this.book = {
+    this.newBookParameters = {
       author: parsedPayload.author,
       isbn: parsedPayload.isbn,
       title: parsedPayload.title,

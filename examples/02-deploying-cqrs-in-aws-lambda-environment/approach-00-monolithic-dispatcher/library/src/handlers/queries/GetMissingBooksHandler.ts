@@ -10,7 +10,7 @@ export class GetMissingBooksHandler implements IQueryHandler<GetMissingBooks, Bo
     this.repository = repository;
   }
 
-  handle(operation: GetMissingBooks) {
-    return this.repository.queryByTypeAndStatus("Book", operation.status);
+  async handle(operation: GetMissingBooks): Promise<Book[]> {
+    return await this.repository.queryByTypeAndStatus("Book", operation.status);
   }
 }

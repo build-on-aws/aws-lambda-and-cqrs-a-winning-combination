@@ -9,8 +9,8 @@ export class GetBorrowedBooksForUserHandler implements IQueryHandler<GetBorrowed
     this.rentalRepository = rentalRepository;
   }
 
-  handle(operation: GetBorrowedBooksForUser) {
-    const rentals = this.rentalRepository.queryByTypeAndSortKey("Rental", operation.userId);
+  async handle(operation: GetBorrowedBooksForUser): Promise<{ id: string }[]> {
+    const rentals = await this.rentalRepository.queryByTypeAndSortKey("Rental", operation.userId);
     return rentals.map((rental) => {
       return { id: rental.bookId };
     });

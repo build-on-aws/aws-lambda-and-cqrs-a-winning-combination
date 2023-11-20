@@ -10,7 +10,7 @@ export class GetBooksByAuthorHandler implements IQueryHandler<GetBooksByAuthor, 
     this.repository = repository;
   }
 
-  handle(operation: GetBooksByAuthor) {
+  async handle(operation: GetBooksByAuthor): Promise<Book[]> {
     return this.repository.queryByTypeAndSortKey("Book", operation.authorId);
   }
 }

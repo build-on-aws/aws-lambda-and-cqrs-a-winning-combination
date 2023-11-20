@@ -5,6 +5,7 @@ import { GetBooksByAuthor, GetBorrowedBooksForUser, GetMissingBooks } from "../o
 import { GetBooksByAuthorHandler, GetBorrowedBooksForUserHandler, GetMissingBooksHandler } from "../handlers/queries";
 import { BookStatus } from "../models/Book";
 import { RentalStatus } from "../models/Rental";
+import { BookRepository, RentalRepository } from "../repositories";
 
 const PATHS = {
   GetBooksByAuthor: "/book/by-author/{authorId}",
@@ -13,7 +14,7 @@ const PATHS = {
 };
 
 export class QueryHandlersFactory {
-  static createAndHandle(context: DispatcherContext, repositoriesFactory: RepositoriesFactory) {
+  static async createAndHandle(context: DispatcherContext, repositoriesFactory: RepositoriesFactory) {
     switch (context.resource) {
       case PATHS.GetBooksByAuthor: {
         if (!context.pathParameters.authorId) {
@@ -21,7 +22,7 @@ export class QueryHandlersFactory {
         }
 
         const query = new GetBooksByAuthor(context.requestId, context.pathParameters.authorId);
-        const handler = new GetBooksByAuthorHandler(repositoriesFactory.createRepositoryFor("Book"));
+        const handler = new GetBooksByAuthorHandler(repositoriesFactory.createRepositoryFor("Book") as BookRepository);
 
         return handler.handle(query);
       }
@@ -36,7 +37,9 @@ export class QueryHandlersFactory {
         }
 
         const query = new GetBorrowedBooksForUser(context.requestId, context.pathParameters.userId);
-        const handler = new GetBorrowedBooksForUserHandler(repositoriesFactory.createRepositoryFor("Rental"));
+        const handler = new GetBorrowedBooksForUserHandler(
+          repositoriesFactory.createRepositoryFor("Rental") as RentalRepository,
+        );
 
         return handler.handle(query);
       }
@@ -47,7 +50,7 @@ export class QueryHandlersFactory {
         }
 
         const query = new GetMissingBooks(context.requestId, context.queryParameters.status.toUpperCase());
-        const handler = new GetMissingBooksHandler(repositoriesFactory.createRepositoryFor("Book"));
+        const handler = new GetMissingBooksHandler(repositoriesFactory.createRepositoryFor("Book") as BookRepository);
 
         return handler.handle(query);
       }

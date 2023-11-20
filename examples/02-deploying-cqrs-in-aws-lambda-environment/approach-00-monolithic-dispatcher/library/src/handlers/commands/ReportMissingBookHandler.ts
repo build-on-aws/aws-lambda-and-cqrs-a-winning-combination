@@ -1,6 +1,6 @@
 import { ICommandHandler } from "./ICommandHandler";
 import { ReportMissingBookCommand } from "../../operations/commands";
-import { ReportMissingBookCommandResponse } from "../../responses";
+import { ReportMissingBookCommandResponse } from "../../payloads/responses";
 import { BookRepository, RentalRepository, UserRepository } from "../../repositories";
 import { ArgumentError } from "../../exceptions/ArgumentError";
 import { BookStatus } from "../../models/Book";
@@ -21,26 +21,31 @@ export class ReportMissingBookHandler
     this.rentalRepository = rentalRepository;
   }
 
-  handle(operation: ReportMissingBookCommand): ReportMissingBookCommandResponse {
-    const rentals = this.rentalRepository.queryByTypeAndStatus("Rental", RentalStatus.BORROWED);
+  async handle(operation: ReportMissingBookCommand): Promise<ReportMissingBookCommandResponse> {
+    const bookId = operation.bookId;
+    const authorIdForMissingBook = operation.missingBookParameters.authorId;
+    const offenderId = operation.missingBookParameters.userId;
 
-    if (rentals.filter((rental) => rental.bookId === operation.bookId).length === 0) {
-      throw new ArgumentError(`Book is not missing, as it is still available: ${operation.bookId}`);
+    // Checking if a given user exists.
+    await this.userRepository.read({ id: offenderId });
+
+    // Checking if a given book is not still available (as it has to be rented to be missing).
+    const rentals = await this.rentalRepository.queryByTypeAndStatus("Rental", RentalStatus.BORROWED);
+
+    if (rentals.filter((rental) => rental.bookId === bookId).length === 0) {
+      throw new ArgumentError(`Book is not missing, as it is still available: ${bookId}`);
     }
 
-    const offender = this.userRepository.read({ id: operation.userId });
+    // Mark this book as missing.
+    await this.bookRepository.update({ bookId, authorId: authorIdForMissingBook }, { status: BookStatus.MISSING });
 
-    const availableBooks = this.bookRepository.queryByTypeAndStatus("Book", BookStatus.AVAILABLE);
-    const affectedBook = availableBooks.filter((book) => book.bookId === operation.bookId)[0];
-    const authorId = affectedBook.authorId;
+    // Suspend the offending user.
+    const comment = `Suspended due to missing book ${bookId} at ${moment().toISOString()}`;
+    await this.userRepository.update({ id: offenderId }, { status: UserStatus.SUSPENDED, comment });
 
-    this.bookRepository.update({ bookId: operation.bookId, authorId }, { status: BookStatus.MISSING });
+    // Remove the rental.
+    await this.rentalRepository.delete({ bookId, userId: offenderId });
 
-    const comment = `Suspended due to missing book ${operation.bookId} at ${moment().toISOString()}`;
-    this.userRepository.update({ id: operation.userId }, { status: UserStatus.SUSPENDED, comment });
-
-    this.rentalRepository.delete({ bookId: operation.bookId, userId: operation.userId });
-
-    return { success: true, bookId: operation.bookId, userId: offender.id };
+    return { success: true, bookId: operation.bookId, userId: offenderId };
   }
 }

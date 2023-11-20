@@ -1,6 +1,6 @@
 import KSUID from "ksuid";
 import { ICommandHandler } from "./ICommandHandler";
-import { AddNewBookCommandResponse } from "../../responses";
+import { AddNewBookCommandResponse } from "../../payloads/responses";
 import { AddNewBookCommand } from "../../operations/commands";
 import { AuthorRepository, BookRepository } from "../../repositories";
 import { Author } from "../../models/Author";
@@ -15,21 +15,23 @@ export class AddNewBookHandler implements ICommandHandler<AddNewBookCommand, Add
     this.authorRepository = authorRepository;
   }
 
-  handle(operation: AddNewBookCommand): AddNewBookCommandResponse {
-    const author = this.getOrCreateAuthor(operation.book.author);
+  async handle(operation: AddNewBookCommand): Promise<AddNewBookCommandResponse> {
+    // Getting an existing author, or creating a new one.
+    const author = await this.getOrCreateAuthor(operation.newBookParameters.author);
 
-    const book = this.bookRepository.create({
+    // Creating a book.
+    const book = await this.bookRepository.create({
       bookId: KSUID.randomSync().string,
       authorId: author.id,
-      title: operation.book.title,
-      isbn: operation.book.isbn,
+      title: operation.newBookParameters.title,
+      isbn: operation.newBookParameters.isbn,
       status: BookStatus.AVAILABLE,
     });
 
     return { success: true, bookId: book.bookId };
   }
 
-  private getOrCreateAuthor(author: Author) {
+  private async getOrCreateAuthor(author: Author) {
     if (!author.id) {
       return this.authorRepository.create({
         id: KSUID.randomSync().string,

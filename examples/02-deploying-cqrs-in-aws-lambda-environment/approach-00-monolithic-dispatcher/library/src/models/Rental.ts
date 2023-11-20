@@ -15,7 +15,7 @@ export type RentalUpdateModel = {
   comment?: string;
 };
 
-export type RentalKey = {
+export type RentalPrimaryKey = {
   bookId: string;
   userId: string;
 };

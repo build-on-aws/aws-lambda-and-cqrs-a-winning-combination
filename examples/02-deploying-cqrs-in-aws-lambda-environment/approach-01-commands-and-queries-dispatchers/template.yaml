@@ -183,13 +183,13 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref LibrarySystemAPI
-            Path: /book/{bookId}/borrow/{userId}
+            Path: /book/{bookId}/borrow
             Method: POST
         ReportBookAsMissingCommand:
           Type: Api
           Properties:
             RestApiId: !Ref LibrarySystemAPI
-            Path: /book/{bookId}/missing/{userId}
+            Path: /book/{bookId}/missing
             Method: POST
 
   QueriesDispatcher:

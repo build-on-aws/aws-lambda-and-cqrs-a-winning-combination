@@ -1,53 +1,112 @@
-/* eslint @typescript-eslint/no-unused-vars: 0 */
 import KSUID from "ksuid";
-import { IRepository } from "./IRepository";
-import { Book, BookKey, BookStatus, BookUpdateModel } from "../models/Book";
+import { IDatabaseProvider, Pair } from "../database/IDatabaseProvider";
+import { BaseRepository } from "./BaseRepository";
+import { Book, BookPrimaryKey, BookUpdateModel } from "../models/Book";
+import { ByTypeAndSortKey, ByTypeAndStatus, Index } from "../database/DatabaseProvider";
+import { PrimaryKey } from "../database/DatabaseEntities";
 
-export class BookRepository implements IRepository<Book, BookUpdateModel, BookKey> {
-  create(model: Book): Book {
-    const ksuid = KSUID.randomSync().string;
+export class BookRepository extends BaseRepository<Book, BookUpdateModel, BookPrimaryKey> {
+  constructor(databaseProvider: IDatabaseProvider) {
+    super(databaseProvider);
+  }
+
+  async create(model: Book): Promise<Book> {
+    const id = KSUID.randomSync().string;
+
+    await this.databaseProvider.put({
+      ...this.getFormattedKey({ bookId: id, authorId: model.authorId }),
+      type: "Book",
+      ...model,
+    });
 
     return {
-      bookId: ksuid,
+      bookId: id,
       authorId: model.authorId,
+      status: model.status,
       title: model.title,
       isbn: model.isbn,
-      status: model.status,
     };
   }
 
-  read(primaryKey: BookKey): Book {
+  async read(primaryKey: BookPrimaryKey): Promise<Book> {
+    const result = await this.databaseProvider.get(this.getFormattedKey(primaryKey));
+
     return {
       bookId: primaryKey.bookId,
       authorId: primaryKey.authorId,
-      title: "",
-      isbn: "",
-      status: BookStatus.NOT_AVAILABLE,
+      status: result["status"],
+      title: result["title"],
+      isbn: result["isbn"],
     };
   }
 
-  update(primaryKey: BookKey, model: BookUpdateModel): Book {
+  async update(primaryKey: BookPrimaryKey, model: BookUpdateModel): Promise<Book> {
+    const fields: Pair[] = [];
+
+    if (model.status) {
+      fields.push({ name: "status", value: model.status });
+    }
+
+    if (model.title) {
+      fields.push({ name: "title", value: model.title });
+    }
+
+    if (model.isbn) {
+      fields.push({ name: "isbn", value: model.isbn });
+    }
+
+    const result = await this.databaseProvider.update(this.getFormattedKey(primaryKey), fields);
+
     return {
       bookId: primaryKey.bookId,
       authorId: primaryKey.authorId,
-      title: model.title ?? "",
-      isbn: model.isbn ?? "",
-      status: model.status ?? BookStatus.NOT_AVAILABLE,
+      status: result["status"],
+      title: result["title"],
+      isbn: result["isbn"],
     };
   }
 
-  delete(primaryKey: BookKey): BookKey {
+  async delete(primaryKey: BookPrimaryKey): Promise<BookPrimaryKey> {
+    await this.databaseProvider.delete(this.getFormattedKey(primaryKey));
+
     return {
       bookId: primaryKey.bookId,
       authorId: primaryKey.authorId,
     };
   }
 
-  queryByTypeAndSortKey(entityName: string, sortKey: string): Book[] {
-    return [];
+  async queryByTypeAndSortKey(entityName: string, sortKey: string): Promise<Book[]> {
+    const collection = await this.databaseProvider.query(ByTypeAndSortKey(entityName, sortKey), Index.TYPE);
+
+    return collection.map((record) => {
+      return {
+        bookId: record["resourceId"].split("#")[1],
+        authorId: record["subResourceId"].split("#")[1],
+        status: record["status"],
+        title: record["title"],
+        isbn: record["isbn"],
+      };
+    });
   }
 
-  queryByTypeAndStatus(entityName: string, status: string): Book[] {
-    return [];
+  async queryByTypeAndStatus(entityName: string, status: string): Promise<Book[]> {
+    const collection = await this.databaseProvider.query(ByTypeAndStatus(entityName, status), Index.STATUS);
+
+    return collection.map((record) => {
+      return {
+        bookId: record["resourceId"].split("#")[1],
+        authorId: record["subResourceId"].split("#")[1],
+        status: record["status"],
+        title: record["title"],
+        isbn: record["isbn"],
+      };
+    });
+  }
+
+  protected getFormattedKey(primaryKey: BookPrimaryKey): PrimaryKey {
+    return {
+      resourceId: `Book#${primaryKey.bookId}`,
+      subResourceId: `Author#${primaryKey.authorId}`,
+    };
   }
 }
