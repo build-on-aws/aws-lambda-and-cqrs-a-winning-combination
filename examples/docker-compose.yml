@@ -23,7 +23,7 @@ services:
       # - "../docs/c4/01-from-crud-to-cqrs/step-03-cqrs-with-ports-and-adapters:/usr/local/structurizr"
       # - "../docs/c4/02-deploying-cqrs-in-aws-lambda-environment/approach-00-monolithic-dispatcher:/usr/local/structurizr"
       # - "../docs/c4/02-deploying-cqrs-in-aws-lambda-environment/approach-01-commands-and-queries-dispatchers:/usr/local/structurizr"
-      # - "../docs/c4/02-deploying-cqrs-in-aws-lambda-environment/approach-02-individual-commands-only:/usr/local/structurizr"
-      # - "../docs/c4/02-deploying-cqrs-in-aws-lambda-environment/approach-03-individual-queries-only:/usr/local/structurizr"
+      # - "../docs/c4/02-deploying-cqrs-in-aws-lambda-environment/approach-02-extract-subdomain-commands-or-subdomain-queries:/usr/local/structurizr"
+      # - "../docs/c4/02-deploying-cqrs-in-aws-lambda-environment/approach-03-extract-individual-commands-or-queries:/usr/local/structurizr"
       # - "../docs/c4/02-deploying-cqrs-in-aws-lambda-environment/approach-04-full-separation:/usr/local/structurizr"
     working_dir: /usr/local/structurizr
