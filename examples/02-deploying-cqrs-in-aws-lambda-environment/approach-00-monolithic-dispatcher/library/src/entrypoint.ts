@@ -38,4 +38,4 @@ const main = middy(plainMain)
   .use(logMetrics(metrics, { captureColdStartMetric: true }))
   .use(injectLambdaContext(logger, { clearState: true }));
 
-export { plainMain, main };
+export { main };

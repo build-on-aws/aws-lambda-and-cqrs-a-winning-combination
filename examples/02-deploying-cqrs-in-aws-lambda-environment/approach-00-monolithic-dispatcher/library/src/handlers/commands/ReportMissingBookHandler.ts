@@ -1,3 +1,4 @@
+import moment from "moment";
 import { ICommandHandler } from "./ICommandHandler";
 import { ReportMissingBookCommand } from "../../operations/commands";
 import { ReportMissingBookCommandResponse } from "../../payloads/responses";
@@ -5,7 +6,6 @@ import { BookRepository, RentalRepository, UserRepository } from "../../reposito
 import { ArgumentError } from "../../exceptions/ArgumentError";
 import { BookStatus } from "../../models/Book";
 import { UserStatus } from "../../models/User";
-import moment from "moment";
 import { RentalStatus } from "../../models/Rental";
 
 export class ReportMissingBookHandler
