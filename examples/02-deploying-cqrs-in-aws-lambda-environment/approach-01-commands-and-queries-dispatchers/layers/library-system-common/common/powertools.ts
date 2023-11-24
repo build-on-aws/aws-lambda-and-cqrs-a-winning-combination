@@ -10,7 +10,6 @@ const logger = new Logger({
 });
 
 const metrics = new Metrics({
-  namespace: "library-system/approach-01",
   defaultDimensions: {
     aws_account_id: process.env.AWS_ACCOUNT_ID || "N/A",
     aws_region: process.env.AWS_REGION || "N/A",

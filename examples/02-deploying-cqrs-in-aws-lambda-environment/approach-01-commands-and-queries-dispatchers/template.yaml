@@ -164,10 +164,10 @@ Resources:
         Target: es2020
         Sourcemap: true
         EntryPoints:
-          - src/entrypoint.ts
+          - src/commands.ts
     Properties:
       CodeUri: library/
-      Handler: handler.commands
+      Handler: commands.handler
       Layers:
         - !Ref LibrarySystemCommonLayer
       Runtime: nodejs20.x
@@ -232,10 +232,10 @@ Resources:
         Target: es2020
         Sourcemap: true
         EntryPoints:
-          - src/entrypoint.ts
+          - src/queries.ts
     Properties:
       CodeUri: library/
-      Handler: handler.queries
+      Handler: queries.handler
       Layers:
         - !Ref LibrarySystemCommonLayer
       Runtime: nodejs20.x

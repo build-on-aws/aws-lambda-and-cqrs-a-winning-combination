@@ -7,5 +7,6 @@ module.exports = {
   root: true,
   rules: {
     "@typescript-eslint/no-explicit-any": "off",
+    "no-case-declarations": "off",
   },
 };

@@ -6,7 +6,8 @@
   "license": "MIT",
   "devDependencies": {
     "@types/node": "~20.8.10",
-    "typescript": "~5.2.2"
+    "typescript": "~5.2.2",
+    "moment": "~2.29.4"
   },
   "scripts": {
     "lint": "npx eslint .",
