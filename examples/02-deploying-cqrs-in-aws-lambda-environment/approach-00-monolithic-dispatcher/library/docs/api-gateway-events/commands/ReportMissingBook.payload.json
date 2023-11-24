@@ -1,11 +1,12 @@
 {
-  "resource": "/book/new",
-  "path": "/book/new",
+  "resource": "/book/{bookId}/missing",
+  "path": "/book/2Yd7vFcSkFQDzu1LSDybhCXV1wi/missing",
   "httpMethod": "POST",
-  "body": "{\"author\":{\"name\":\"John Doe\",\"birthdate\":\"1980-02-03T23:00:00.000Z\"},\"title\":\"Yet Another Testing Book\",\"isbn\":\"80-902734-1-6\"}",
+  "body": "{ \"userId\": \"2Yd89Ain8o95ISdO9xxYK1xxLUO\", \"authorId\": \"2Yd89pQbgTAtJeRmhmmMnFIAs4u\" }",
   "isBase64Encoded": false,
   "pathParameters": {
-    "proxy": "/book/new"
+    "proxy": "/book/2Yd7vFcSkFQDzu1LSDybhCXV1wi/missing",
+    "bookId": "2Yd7vFcSkFQDzu1LSDybhCXV1wi"
   },
   "headers": {
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
@@ -47,8 +48,8 @@
       "userAgent": "Custom User Agent String",
       "user": null
     },
-    "path": "/prod/book/new",
-    "resourcePath": "/book/new",
+    "path": "/prod/book/2Yd7vFcSkFQDzu1LSDybhCXV1wi/missing",
+    "resourcePath": "/book/2Yd7vFcSkFQDzu1LSDybhCXV1wi/missing",
     "httpMethod": "POST",
     "apiId": "1234567890",
     "protocol": "HTTP/1.1"

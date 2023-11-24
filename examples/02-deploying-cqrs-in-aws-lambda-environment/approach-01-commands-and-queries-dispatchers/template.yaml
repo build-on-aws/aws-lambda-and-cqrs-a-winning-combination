@@ -196,8 +196,11 @@ Resources:
             - Effect: Allow
               Action:
                 - "dynamodb:DescribeLimits"
+                - "dynamodb:Query"
               Resource:
                 - !GetAtt LibrarySystemDatabase.Arn
+                - !Sub "${LibrarySystemDatabase.Arn}/index/${EntityTypeIndexName}"
+                - !Sub "${LibrarySystemDatabase.Arn}/index/${EntityStatusIndexName}"
       Events:
         AddNewBookCommand:
           Type: Api
@@ -251,8 +254,6 @@ Resources:
             - Effect: Allow
               Action:
                 - "dynamodb:DescribeTable"
-                - "dynamodb:GetItem"
-                - "dynamodb:ConditionCheckItem"
               Resource:
                 - !GetAtt LibrarySystemDatabase.Arn
             - Effect: Allow
