@@ -1,0 +1,362 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+
+Description: |
+  Example infrastructure as code for different approaches of deploying CQRS architecture on top of AWS Lambda.
+
+  Approach #2: Extract Subdomains
+
+  This example covers an alternative split that is domain-wise - instead of purely based on the operation type. Here,
+  it does not separate only commands and queries, but it focuses on grouping similar code into a bounded context (or
+  in other words - a subdomain) responsible for missing books management. Motivation for such split can be related with
+  the subdomain complexity, as this way it allows for efficient cognitive load management for a responsible team.
+  Again, it is possible to share the common implementation through AWS Lambda Layers, as as previously shared modules
+  stays the same. The same for adapters implementation.
+
+Globals:
+
+  Function:
+    Timeout: 15
+    Tracing: Active
+
+  Api:
+    TracingEnabled: true
+
+Metadata:
+
+  AWS::CloudFormation::Interface:
+
+    ParameterGroups:
+      - Label:
+          default: "Software Development Life Cycle (SDLC)"
+        Parameters:
+          - Stage
+
+      - Label:
+          default: "Amazon DynamoDB"
+        Parameters:
+          - EntityTypeIndexName
+          - EntityStatusIndexName
+
+    ParameterLabels:
+      Stage:
+        default: "Name of the software development life cycle (SDLC) stage into which we are deploying."
+
+      EntityTypeIndexName:
+        default: "Name of the GSI that allows to query by entity type and sort key."
+
+      EntityStatusIndexName:
+        default: "Name of the GSI that allows to query by entity type and status."
+
+Parameters:
+
+  Stage:
+    Type: String
+    Description: Name of the environment where the infrastructure will be deployed.
+    AllowedValues:
+      - dev
+      - test
+      - prod
+    Default: dev
+
+  EntityTypeIndexName:
+    Type: String
+    Description: Name of the GSI that allows to query by entity type in the Amazon DynamoDB table.
+    Default: "entity-type"
+
+  EntityStatusIndexName:
+    Type: String
+    Description: Name of the GSI that allows to query by the status of the entity in the Amazon DynamoDB table.
+    Default: "entity-status"
+
+Resources:
+
+  LibrarySystemDatabase:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
+    Properties:
+      TableName: library-system-database
+      KeySchema:
+        - AttributeName: resourceId
+          KeyType: HASH
+        - AttributeName: subResourceId
+          KeyType: RANGE
+      AttributeDefinitions:
+        - AttributeName: resourceId
+          AttributeType: S
+        - AttributeName: subResourceId
+          AttributeType: S
+        - AttributeName: type
+          AttributeType: S
+        - AttributeName: status
+          AttributeType: S
+        # ... and the rest of non-key attributes:
+        #
+        # - AttributeName: name
+        #   AttributeType: S
+        # - AttributeName: birthdate
+        #   AttributeType: S
+        # - AttributeName: email
+        #   AttributeType: S
+        # - AttributeName: birthdate
+        #   AttributeType: S
+        # - AttributeName: comment
+        #   AttributeType: S
+        # - AttributeName: createdAt
+        #   AttributeType: S
+        # - AttributeName: updatedAt
+        #   AttributeType: S
+        # - AttributeName: title
+        #   AttributeType: S
+        # - AttributeName: isbn
+        #   AttributeType: S
+      GlobalSecondaryIndexes:
+        - IndexName: !Ref EntityTypeIndexName
+          KeySchema:
+            - AttributeName: type
+              KeyType: HASH
+            - AttributeName: subResourceId
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+          ContributorInsightsSpecification:
+            Enabled: true
+        - IndexName: !Ref EntityStatusIndexName
+          KeySchema:
+            - AttributeName: type
+              KeyType: HASH
+            - AttributeName: status
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+          ContributorInsightsSpecification:
+            Enabled: true
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      ContributorInsightsSpecification:
+        Enabled: true
+      BillingMode: PAY_PER_REQUEST
+      TableClass: STANDARD
+      DeletionProtectionEnabled: false
+
+  LibrarySystemAPI:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: !Ref Stage
+
+  LibrarySystemCommonLayer:
+    Type: AWS::Serverless::LayerVersion
+    Metadata:
+      BuildMethod: makefile
+    Properties:
+      ContentUri: layers/library-system-common/
+      CompatibleRuntimes:
+        - nodejs20.x
+      RetentionPolicy: Delete
+
+  MissingBooksHandler:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        External:
+          - library-system-common
+        Minify: true
+        Target: es2020
+        Sourcemap: true
+        EntryPoints:
+          - src/queries.ts
+    Properties:
+      CodeUri: library/
+      Handler: queries.handler
+      Layers:
+        - !Ref LibrarySystemCommonLayer
+      Runtime: nodejs20.x
+      Architectures:
+        - x86_64
+      Environment:
+        Variables:
+          POWERTOOLS_SERVICE_NAME: missing-books-handler
+          POWERTOOLS_METRICS_NAMESPACE: library-system/approach-02
+          POWERTOOLS_LOG_LEVEL: INFO
+          DYNAMODB_TABLE_NAME: !Ref LibrarySystemDatabase
+          DYNAMODB_GSI1_NAME: !Ref EntityTypeIndexName
+          DYNAMODB_GSI2_NAME: !Ref EntityStatusIndexName
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "dynamodb:DescribeTable"
+                - "dynamodb:PutItem"
+                - "dynamodb:GetItem"
+                - "dynamodb:UpdateItem"
+                - "dynamodb:DeleteItem"
+                - "dynamodb:ConditionCheckItem"
+              Resource:
+                - !GetAtt LibrarySystemDatabase.Arn
+            - Effect: Allow
+              Action:
+                - "dynamodb:DescribeLimits"
+                - "dynamodb:Query"
+              Resource:
+                - !GetAtt LibrarySystemDatabase.Arn
+                - !Sub "${LibrarySystemDatabase.Arn}/index/${EntityTypeIndexName}"
+                - !Sub "${LibrarySystemDatabase.Arn}/index/${EntityStatusIndexName}"
+      Events:
+        GetMissingBooksQuery:
+          Type: Api
+          Properties:
+            RestApiId: !Ref LibrarySystemAPI
+            Path: /book
+            Method: GET
+            RequestParameters:
+              - method.request.querystring.status:
+                  Required: true
+        ReportBookAsMissingCommand:
+          Type: Api
+          Properties:
+            RestApiId: !Ref LibrarySystemAPI
+            Path: /book/{bookId}/missing
+            Method: POST
+
+  RestOfCommandsDispatcher:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        External:
+          - library-system-common
+        Minify: true
+        Target: es2020
+        Sourcemap: true
+        EntryPoints:
+          - src/commands.ts
+    Properties:
+      CodeUri: library/
+      Handler: commands.handler
+      Layers:
+        - !Ref LibrarySystemCommonLayer
+      Runtime: nodejs20.x
+      Architectures:
+        - x86_64
+      Environment:
+        Variables:
+          POWERTOOLS_SERVICE_NAME: rest-of-commands-dispatcher
+          POWERTOOLS_METRICS_NAMESPACE: library-system/approach-02
+          POWERTOOLS_LOG_LEVEL: INFO
+          DYNAMODB_TABLE_NAME: !Ref LibrarySystemDatabase
+          DYNAMODB_GSI1_NAME: !Ref EntityTypeIndexName
+          DYNAMODB_GSI2_NAME: !Ref EntityStatusIndexName
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "dynamodb:DescribeTable"
+                - "dynamodb:PutItem"
+                - "dynamodb:GetItem"
+                - "dynamodb:UpdateItem"
+                - "dynamodb:DeleteItem"
+                - "dynamodb:ConditionCheckItem"
+              Resource:
+                - !GetAtt LibrarySystemDatabase.Arn
+            - Effect: Allow
+              Action:
+                - "dynamodb:DescribeLimits"
+                - "dynamodb:Query"
+              Resource:
+                - !GetAtt LibrarySystemDatabase.Arn
+                - !Sub "${LibrarySystemDatabase.Arn}/index/${EntityTypeIndexName}"
+                - !Sub "${LibrarySystemDatabase.Arn}/index/${EntityStatusIndexName}"
+      Events:
+        AddNewBookCommand:
+          Type: Api
+          Properties:
+            RestApiId: !Ref LibrarySystemAPI
+            Path: /book/new
+            Method: POST
+        BorrowBookCommand:
+          Type: Api
+          Properties:
+            RestApiId: !Ref LibrarySystemAPI
+            Path: /book/{bookId}/borrow
+            Method: POST
+
+  RestOfQueriesDispatcher:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        External:
+          - library-system-common
+        Minify: true
+        Target: es2020
+        Sourcemap: true
+        EntryPoints:
+          - src/queries.ts
+    Properties:
+      CodeUri: library/
+      Handler: queries.handler
+      Layers:
+        - !Ref LibrarySystemCommonLayer
+      Runtime: nodejs20.x
+      Architectures:
+        - x86_64
+      Environment:
+        Variables:
+          POWERTOOLS_SERVICE_NAME: rest-of-queries-dispatcher
+          POWERTOOLS_METRICS_NAMESPACE: library-system/approach-02
+          POWERTOOLS_LOG_LEVEL: INFO
+          DYNAMODB_TABLE_NAME: !Ref LibrarySystemDatabase
+          DYNAMODB_GSI1_NAME: !Ref EntityTypeIndexName
+          DYNAMODB_GSI2_NAME: !Ref EntityStatusIndexName
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - "dynamodb:DescribeTable"
+              Resource:
+                - !GetAtt LibrarySystemDatabase.Arn
+            - Effect: Allow
+              Action:
+                - "dynamodb:DescribeLimits"
+                - "dynamodb:Query"
+              Resource:
+                - !GetAtt LibrarySystemDatabase.Arn
+                - !Sub "${LibrarySystemDatabase.Arn}/index/${EntityTypeIndexName}"
+                - !Sub "${LibrarySystemDatabase.Arn}/index/${EntityStatusIndexName}"
+      Events:
+        GetBooksByAuthorQuery:
+          Type: Api
+          Properties:
+            RestApiId: !Ref LibrarySystemAPI
+            Path: /book/by-author/{authorId}
+            Method: GET
+        GetBorrowedBooksForUserQuery:
+          Type: Api
+          Properties:
+            RestApiId: !Ref LibrarySystemAPI
+            Path: /book/by-user/{userId}
+            Method: GET
+            RequestParameters:
+              - method.request.querystring.status:
+                  Required: true
+
+  ApplicationResourceGroup:
+    Type: AWS::ResourceGroups::Group
+    Properties:
+      Name: !Sub "ApplicationInsights-SAM-${AWS::StackName}"
+      ResourceQuery:
+        Type: CLOUDFORMATION_STACK_1_0
+
+  ApplicationInsightsMonitoring:
+    Type: AWS::ApplicationInsights::Application
+    Properties:
+      ResourceGroupName: !Ref ApplicationResourceGroup
+      AutoConfigurationEnabled: true
+
+Outputs:
+
+  LibrarySystemApiURL:
+    Description: Amazon API Gateway endpoint URL for a given stage.
+    Value: !Sub "https://${LibrarySystemAPI}.execute-api.${AWS::Region}.amazonaws.com/${Stage}"
