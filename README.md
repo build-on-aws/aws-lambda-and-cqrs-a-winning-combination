@@ -87,7 +87,7 @@ Starting from the initial stage, the internals of the application looks as follo
 
 And the plan is to achieve something similar to this state (_after_):
 
-![One of the ending points for the discussion: CQRS implementation deployed on AWS Lambda (AFTER)](./docs/approach-02-commands-and-queries-dispatchers-components.png)
+![One of the ending points for the discussion: CQRS implementation deployed on AWS Lambda (AFTER)](./docs/approach-01-commands-and-queries-dispatchers-components.png)
 
 Application have 4 entities:
 
