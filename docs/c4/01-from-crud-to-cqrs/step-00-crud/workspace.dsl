@@ -1,26 +1,26 @@
 workspace {
   model {
-    customer = person "Borrower" "End-user that returns and borrows books." "Customer"
+    customer = person "Borrower" "End-user that returns and borrows books" "Customer"
 
     group "Library" {
-      librarian = person "Librarian" "Responsible for managing the library." "Library Staff"
+      librarian = person "Librarian" "Responsible for managing the library" "Library Staff"
 
-      email = softwaresystem "E-mail System" "The internal e-mail system." "Existing System"
+      email = softwaresystem "E-mail System" "The internal e-mail system" "Existing System"
 
-      librarySystem = softwareSystem "Library System" "Responsible for storage and exposing operations on books, users, and authors." {
-        singlePageApplication = container "Single-Page Application" "Provides all of the online library functionality to customers via their web browser." "JavaScript and React" "Web Browser"
-        webServer = container "Web Server" "Serves the single-page application to the customers." "Node.js and Express" "Web Server"
+      librarySystem = softwareSystem "Library System" "Responsible for storage and exposing operations on books, users, and authors" {
+        singlePageApplication = container "Single-Page Application" "Provides all of the online library functionality to customers via their web browser" "JavaScript and React" "Web Browser"
+        webServer = container "Web Server" "Serves the single-page application to the customers" "Node.js and Express" "Web Server"
 
-        apiApplication = container "API Application" "Provides library functionality via a REST API (HTTPS + JSON)." "Node.js and Express" {
-          authorController = component "Author Controller" "Provides relevant management actions for book authors." "Controller"
-          bookController = component "Book Controller" "Provides relevant management actions for books." "Controller"
-          rentalController = component "Rental Controller" "Provides relevant management actions for rentals." "Controller"
-          userController = component "User Controller" "Provides relevant management actions for users." "Controller"
+        apiApplication = container "API Application" "Provides library functionality via a REST API (HTTPS + JSON)" "Node.js and TypeScript" {
+          authorController = component "Author Controller" "Provides relevant management actions for book authors" "Controller"
+          bookController = component "Book Controller" "Provides relevant management actions for books" "Controller"
+          rentalController = component "Rental Controller" "Provides relevant management actions for rentals" "Controller"
+          userController = component "User Controller" "Provides relevant management actions for users" "Controller"
 
           databaseProvider = component "Database Provider" "Provides an abstraction over database access (Amazon DynamoDB API)" "Provider"
         }
 
-        database = container "Database Layer" "Stores users, authors, books, etc." "Amazon DynbamoDB" "Database" {
+        database = container "Database Layer" "Stores authors, books, rentals, and users" "Amazon DynbamoDB" "Database" {
           librarySystemTable = component "Library System Table" "Single Table Design that represents entities in the library domain" "Amazon DynamoDB Table" "Table"
           gsi1 = component "Entity Type Index" "Global Secondary Index (GSI) that allows for querying by the entity type and sort key" "Amazon DynamoDB Global Secondary Index (GSI)" "Index"
           gsi2 = component "Entity Status Index" "Global Secondary Index (GSI) that allows for querying by the entity type and status" "Amazon DynamoDB Global Secondary Index (GSI)" "Index"
@@ -73,7 +73,7 @@ workspace {
     systemContext librarySystem "SystemContext" {
       include *
       autoLayout
-      description "The system context diagram for the Library System."
+      description "The system context diagram for the Library System"
       properties {
         structurizr.groups false
       }
@@ -82,19 +82,19 @@ workspace {
     container librarySystem "Containers" {
       include *
       autoLayout
-      description "The container diagram for the Library System."
+      description "The container diagram for the Library System"
     }
 
     component apiApplication "APIApplicationComponents" {
       include *
       autoLayout
-      description "The component diagram for the API Application."
+      description "The component diagram for the API Application"
     }
 
     component database "DatabaseLayerComponents" {
       include *
       autoLayout
-      description "The component diagram for the Database Layer."
+      description "The component diagram for the Database Layer"
     }
 
     styles {
