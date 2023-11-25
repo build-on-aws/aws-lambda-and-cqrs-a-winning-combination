@@ -1,5 +1,5 @@
+import { QueriesDispatcherContext } from "library-system-common/common/lambda-adapter";
 import { ArgumentError } from "library-system-common/exceptions";
-import { DispatcherContext } from "../dispatchers/CommandsDispatcher";
 import { RepositoriesFactory } from "./RepositoriesFactory";
 import { GetBooksByAuthor, GetBorrowedBooksForUser, GetMissingBooks } from "../operations/queries";
 import { GetBooksByAuthorHandler, GetBorrowedBooksForUserHandler, GetMissingBooksHandler } from "../handlers/queries";
@@ -13,7 +13,7 @@ const PATHS = {
 };
 
 export class QueryHandlersFactory {
-  static async createAndHandle(context: DispatcherContext, repositoriesFactory: RepositoriesFactory) {
+  static async createAndHandle(context: QueriesDispatcherContext, repositoriesFactory: RepositoriesFactory) {
     switch (context.resource) {
       case PATHS.GetBooksByAuthor: {
         if (!context.pathParameters.authorId) {

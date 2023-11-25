@@ -18,6 +18,8 @@ Globals:
   Function:
     Timeout: 15
     Tracing: Active
+    Layers:
+      - !Sub "arn:aws:lambda:${AWS::Region}:094274105915:layer:AWSLambdaPowertoolsTypeScript:27"
 
   Api:
     TracingEnabled: true
@@ -160,13 +162,17 @@ Resources:
     Metadata:
       BuildMethod: esbuild
       BuildProperties:
-        External:
-          - library-system-common
         Minify: true
         Target: es2020
         Sourcemap: true
         EntryPoints:
           - src/commands.ts
+        External:
+          - "library-system-common"
+          - "@aws-lambda-powertools/commons"
+          - "@aws-lambda-powertools/logger"
+          - "@aws-lambda-powertools/metrics"
+          - "@aws-lambda-powertools/tracer"
     Properties:
       CodeUri: library/
       Handler: commands.handler
@@ -210,31 +216,23 @@ Resources:
             RestApiId: !Ref LibrarySystemAPI
             Path: /book/new
             Method: POST
-        BorrowBookCommand:
-          Type: Api
-          Properties:
-            RestApiId: !Ref LibrarySystemAPI
-            Path: /book/{bookId}/borrow
-            Method: POST
-        ReportBookAsMissingCommand:
-          Type: Api
-          Properties:
-            RestApiId: !Ref LibrarySystemAPI
-            Path: /book/{bookId}/missing
-            Method: POST
 
   BorrowBookCommandHandler:
     Type: AWS::Serverless::Function
     Metadata:
       BuildMethod: esbuild
       BuildProperties:
-        External:
-          - library-system-common
         Minify: true
         Target: es2020
         Sourcemap: true
         EntryPoints:
           - src/commands.ts
+        External:
+          - "library-system-common"
+          - "@aws-lambda-powertools/commons"
+          - "@aws-lambda-powertools/logger"
+          - "@aws-lambda-powertools/metrics"
+          - "@aws-lambda-powertools/tracer"
     Properties:
       CodeUri: library/
       Handler: commands.handler
@@ -284,13 +282,17 @@ Resources:
     Metadata:
       BuildMethod: esbuild
       BuildProperties:
-        External:
-          - library-system-common
         Minify: true
         Target: es2020
         Sourcemap: true
         EntryPoints:
           - src/commands.ts
+        External:
+          - "library-system-common"
+          - "@aws-lambda-powertools/commons"
+          - "@aws-lambda-powertools/logger"
+          - "@aws-lambda-powertools/metrics"
+          - "@aws-lambda-powertools/tracer"
     Properties:
       CodeUri: library/
       Handler: commands.handler
@@ -340,13 +342,17 @@ Resources:
     Metadata:
       BuildMethod: esbuild
       BuildProperties:
-        External:
-          - library-system-common
         Minify: true
         Target: es2020
         Sourcemap: true
         EntryPoints:
           - src/queries.ts
+        External:
+          - "library-system-common"
+          - "@aws-lambda-powertools/commons"
+          - "@aws-lambda-powertools/logger"
+          - "@aws-lambda-powertools/metrics"
+          - "@aws-lambda-powertools/tracer"
     Properties:
       CodeUri: library/
       Handler: queries.handler
@@ -385,37 +391,23 @@ Resources:
             RestApiId: !Ref LibrarySystemAPI
             Path: /book/by-author/{authorId}
             Method: GET
-        GetBorrowedBooksForUserQuery:
-          Type: Api
-          Properties:
-            RestApiId: !Ref LibrarySystemAPI
-            Path: /book/by-user/{userId}
-            Method: GET
-            RequestParameters:
-              - method.request.querystring.status:
-                  Required: true
-        GetMissingBooksQuery:
-          Type: Api
-          Properties:
-            RestApiId: !Ref LibrarySystemAPI
-            Path: /book
-            Method: GET
-            RequestParameters:
-              - method.request.querystring.status:
-                  Required: true
 
   GetBorrowedBooksForUserQueryHandler:
     Type: AWS::Serverless::Function
     Metadata:
       BuildMethod: esbuild
       BuildProperties:
-        External:
-          - library-system-common
         Minify: true
         Target: es2020
         Sourcemap: true
         EntryPoints:
           - src/queries.ts
+        External:
+          - "library-system-common"
+          - "@aws-lambda-powertools/commons"
+          - "@aws-lambda-powertools/logger"
+          - "@aws-lambda-powertools/metrics"
+          - "@aws-lambda-powertools/tracer"
     Properties:
       CodeUri: library/
       Handler: queries.handler
@@ -463,13 +455,17 @@ Resources:
     Metadata:
       BuildMethod: esbuild
       BuildProperties:
-        External:
-          - library-system-common
         Minify: true
         Target: es2020
         Sourcemap: true
         EntryPoints:
           - src/queries.ts
+        External:
+          - "library-system-common"
+          - "@aws-lambda-powertools/commons"
+          - "@aws-lambda-powertools/logger"
+          - "@aws-lambda-powertools/metrics"
+          - "@aws-lambda-powertools/tracer"
     Properties:
       CodeUri: library/
       Handler: queries.handler

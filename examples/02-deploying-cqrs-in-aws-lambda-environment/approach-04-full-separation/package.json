@@ -4,6 +4,9 @@
   "license": "MIT",
   "dependencies": {},
   "devDependencies": {
+    "@aws-lambda-powertools/logger": "~1.15.0",
+    "@aws-lambda-powertools/metrics": "~1.15.0",
+    "@aws-lambda-powertools/tracer": "~1.15.0",
     "@types/jest": "~29.5.7",
     "@types/node": "~20.8.10",
     "@types/supertest": "~2.0.15",

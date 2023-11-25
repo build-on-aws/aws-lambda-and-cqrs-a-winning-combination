@@ -1,4 +1,4 @@
-import { DispatcherContext } from "../dispatchers/CommandsDispatcher";
+import { CommandsDispatcherContext } from "library-system-common/common/lambda-adapter";
 import { ArgumentError } from "library-system-common/exceptions";
 import { RepositoriesFactory } from "./RepositoriesFactory";
 import { AddNewBookCommand, BorrowBookCommand, ReportMissingBookCommand } from "../operations/commands";
@@ -12,7 +12,7 @@ const PATHS = {
 };
 
 export class CommandHandlersFactory {
-  static async createAndHandle(context: DispatcherContext, repositoriesFactory: RepositoriesFactory) {
+  static async createAndHandle(context: CommandsDispatcherContext, repositoriesFactory: RepositoriesFactory) {
     switch (context.resource) {
       case PATHS.AddNewBook: {
         if (!context.payload) {

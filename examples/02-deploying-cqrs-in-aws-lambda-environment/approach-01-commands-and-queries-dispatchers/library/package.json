@@ -22,12 +22,10 @@
     "typescript": "~5.2.2"
   },
   "dependencies": {
-    "@aws-lambda-powertools/logger": "~1.15.0",
-    "@aws-lambda-powertools/metrics": "~1.15.0",
-    "@aws-lambda-powertools/tracer": "~1.15.0",
     "@middy/core": "~4.7.0",
     "esbuild": "~0.14.14",
-    "ksuid": "~3.0.0"
+    "ksuid": "~3.0.0",
+    "moment": "~2.29.4"
   },
   "scripts": {
     "lint": "npx eslint .",

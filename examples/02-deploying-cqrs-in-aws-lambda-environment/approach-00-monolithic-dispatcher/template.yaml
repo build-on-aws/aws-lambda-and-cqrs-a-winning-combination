@@ -14,6 +14,8 @@ Globals:
   Function:
     Timeout: 15
     Tracing: Active
+    Layers:
+      - !Sub "arn:aws:lambda:${AWS::Region}:094274105915:layer:AWSLambdaPowertoolsTypeScript:27"
 
   Api:
     TracingEnabled: true
@@ -151,6 +153,11 @@ Resources:
         Sourcemap: true
         EntryPoints:
           - src/entrypoint.ts
+        External:
+          - "@aws-lambda-powertools/commons"
+          - "@aws-lambda-powertools/logger"
+          - "@aws-lambda-powertools/metrics"
+          - "@aws-lambda-powertools/tracer"
     Properties:
       CodeUri: library/
       Handler: entrypoint.main

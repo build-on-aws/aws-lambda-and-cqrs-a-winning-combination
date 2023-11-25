@@ -81,9 +81,13 @@ Our *use case* for this exercise is a *back-end* of the web application supporti
 
 All code in this example repository is written in *TypeScript*. Example starts from a very simplistic *CRUD (Create, Read, Update, Delete)* implementation. First step is available in *[examples/01-from-crud-to-cqrs/step-00-crud](./examples/01-from-crud-to-cqrs/step-00-crud)* directory, and each directory is a further step in the sequence of refining and refactoring even more towards domain-oriented code.
 
-Starting from the initial stage, the internals of the application looks as follows:
+Starting from the initial stage, the internals of the application looks as follows (_before_):
 
-![Starting point for the discussion: CRUD-like implementation of the system](./docs/step-00-crud-components.png)
+![Starting point for the discussion: CRUD-like implementation of the system (BEFORE)](./docs/step-00-crud-components.png)
+
+And the plan is to achieve something similar to this state (_after_):
+
+![One of the ending points for the discussion: CQRS implementation deployed on AWS Lambda (AFTER)](./docs/approach-02-commands-and-queries-dispatchers-components.png)
 
 Application have 4 entities:
 
