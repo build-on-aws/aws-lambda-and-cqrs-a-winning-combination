@@ -1,5 +1,5 @@
 import { Request } from "express";
-import { PaginationParameters } from "../database/DatabaseActionsProvider";
+import { PaginationParameters } from "../database/IDatabaseProvider";
 
 export const DEFAULT_LIMIT = 100;
 export const DEFAULT_SCAN_INDEX_FORWARD = true;

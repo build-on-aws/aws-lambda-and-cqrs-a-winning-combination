@@ -1,4 +1,4 @@
-import { BookStatus } from "../../src/model/Book";
+import { BookStatus } from "../../src/models/Book";
 import { getAgent, getFakeAuthorId, getFakeBook, start, stop } from "../helpers/common";
 
 describe("CRUD Controller: /book", () => {

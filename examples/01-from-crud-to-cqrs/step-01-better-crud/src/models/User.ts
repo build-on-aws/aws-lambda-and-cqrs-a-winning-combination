@@ -4,6 +4,11 @@ export enum UserStatus {
   SUSPENDED = "SUSPENDED",
 }
 
+export type UserRequestPayload = {
+  name: string;
+  email: string;
+};
+
 export type User = {
   id: string;
   name: string;

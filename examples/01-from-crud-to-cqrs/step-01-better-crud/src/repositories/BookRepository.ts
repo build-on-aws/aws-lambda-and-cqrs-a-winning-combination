@@ -1,9 +1,10 @@
 import KSUID from "ksuid";
-import { IDatabaseProvider, Pair } from "../database/IDatabaseProvider";
+import { IDatabaseProvider, PaginationParameters, Pair } from "../database/IDatabaseProvider";
 import { BaseRepository } from "./BaseRepository";
 import { Book, BookPrimaryKey, BookUpdateModel } from "../models/Book";
 import { ByTypeAndSortKey, ByTypeAndStatus, Index } from "../database/DatabaseProvider";
 import { PrimaryKey } from "../database/DatabaseEntities";
+import { MappingValidationError } from "../exceptions/MappingValidationError";
 
 export class BookRepository extends BaseRepository<Book, BookUpdateModel, BookPrimaryKey> {
   constructor(databaseProvider: IDatabaseProvider) {
@@ -12,6 +13,14 @@ export class BookRepository extends BaseRepository<Book, BookUpdateModel, BookPr
 
   async create(model: Book): Promise<Book> {
     const id = KSUID.randomSync().string;
+
+    if (!model.title) {
+      throw new MappingValidationError("Book: 'title' field is required");
+    }
+
+    if (!model.isbn) {
+      throw new MappingValidationError("Book: 'isbn' field is required");
+    }
 
     await this.databaseProvider.put({
       ...this.getFormattedKey({ bookId: id, authorId: model.authorId }),
@@ -75,8 +84,8 @@ export class BookRepository extends BaseRepository<Book, BookUpdateModel, BookPr
     };
   }
 
-  async queryByTypeAndSortKey(entityName: string, sortKey: string): Promise<Book[]> {
-    const collection = await this.databaseProvider.query(ByTypeAndSortKey(entityName, sortKey), Index.TYPE);
+  async queryByTypeAndSortKey(name: string, sortKey: string, pagination?: PaginationParameters): Promise<Book[]> {
+    const collection = await this.databaseProvider.query(ByTypeAndSortKey(name, sortKey), Index.TYPE, pagination);
 
     return collection.map((record) => {
       return {
@@ -89,8 +98,8 @@ export class BookRepository extends BaseRepository<Book, BookUpdateModel, BookPr
     });
   }
 
-  async queryByTypeAndStatus(entityName: string, status: string): Promise<Book[]> {
-    const collection = await this.databaseProvider.query(ByTypeAndStatus(entityName, status), Index.STATUS);
+  async queryByTypeAndStatus(name: string, status: string, pagination?: PaginationParameters): Promise<Book[]> {
+    const collection = await this.databaseProvider.query(ByTypeAndStatus(name, status), Index.STATUS, pagination);
 
     return collection.map((record) => {
       return {

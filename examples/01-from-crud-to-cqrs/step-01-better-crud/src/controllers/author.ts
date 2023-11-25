@@ -2,9 +2,9 @@ import KSUID from "ksuid";
 import Router from "express-promise-router";
 import { Request, Response } from "express";
 import { extractPaginationDetails } from "../common/controllers";
-import { DI } from "../server";
-import { AuthorRequestPayload } from "../models/Author";
+import { AuthorRequestPayload, AuthorUpdateModel } from "../models/Author";
 import { AuthorRepository } from "../repositories";
+import { DI } from "../server";
 
 const router = Router();
 
@@ -51,7 +51,7 @@ router.get("/:id", async (req: Request<{ id: string }>, res: Response) => {
 router.put("/:id", async (req: Request<{ id: string }>, res: Response) => {
   const id = req.params.id;
   const payload = req.body;
-  const request = payload as AuthorRequestPayload;
+  const request = payload as AuthorUpdateModel;
 
   const repository = DI.repositoriesFactory.createRepositoryFor("Author") as AuthorRepository;
   const result = await repository.update({ id }, request);

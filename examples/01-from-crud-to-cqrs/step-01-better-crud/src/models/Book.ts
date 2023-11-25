@@ -4,6 +4,11 @@ export enum BookStatus {
   MISSING = "MISSING",
 }
 
+export type BookRequestPayload = {
+  title: string;
+  isbn: string;
+};
+
 export type Book = {
   bookId: string;
   authorId: string;

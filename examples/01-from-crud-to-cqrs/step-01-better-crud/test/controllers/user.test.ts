@@ -1,4 +1,4 @@
-import { UserStatus } from "../../src/model/User";
+import { UserStatus } from "../../src/models/User";
 import { getAgent, getFakeUser, getFakeUserId, start, stop } from "../helpers/common";
 
 describe("CRUD Controller: /user", () => {

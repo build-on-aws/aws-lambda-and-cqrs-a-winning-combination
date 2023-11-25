@@ -1,4 +1,4 @@
-import { IDatabaseProvider, Pair } from "../database/IDatabaseProvider";
+import { IDatabaseProvider, PaginationParameters, Pair } from "../database/IDatabaseProvider";
 import { BaseRepository } from "./BaseRepository";
 import { Rental, RentalPrimaryKey, RentalUpdateModel } from "../models/Rental";
 import { ByTypeAndSortKey, ByTypeAndStatus, Index } from "../database/DatabaseProvider";
@@ -65,8 +65,8 @@ export class RentalRepository extends BaseRepository<Rental, RentalUpdateModel, 
     };
   }
 
-  async queryByTypeAndSortKey(entityName: string, sortKey: string): Promise<Rental[]> {
-    const collection = await this.databaseProvider.query(ByTypeAndSortKey(entityName, sortKey), Index.TYPE);
+  async queryByTypeAndSortKey(name: string, sortKey: string, pagination?: PaginationParameters): Promise<Rental[]> {
+    const collection = await this.databaseProvider.query(ByTypeAndSortKey(name, sortKey), Index.TYPE, pagination);
 
     return collection.map((record) => {
       return {
@@ -78,8 +78,8 @@ export class RentalRepository extends BaseRepository<Rental, RentalUpdateModel, 
     });
   }
 
-  async queryByTypeAndStatus(entityName: string, status: string): Promise<Rental[]> {
-    const collection = await this.databaseProvider.query(ByTypeAndStatus(entityName, status), Index.STATUS);
+  async queryByTypeAndStatus(name: string, status: string, pagination?: PaginationParameters): Promise<Rental[]> {
+    const collection = await this.databaseProvider.query(ByTypeAndStatus(name, status), Index.STATUS, pagination);
 
     return collection.map((record) => {
       return {

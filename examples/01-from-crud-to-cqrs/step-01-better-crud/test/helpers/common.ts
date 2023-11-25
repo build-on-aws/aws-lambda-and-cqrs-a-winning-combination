@@ -2,18 +2,24 @@ import KSUID from "ksuid";
 import request from "supertest";
 import { app } from "../../src/server";
 import { DI, init } from "../../src/server";
-import { DatabaseEnvironmentProvider } from "../../src/database/DatabaseEnvironmentProvider";
+import { DatabaseProvider } from "../../src/database/DatabaseProvider";
 
-const providedTableName = process.env.DYNAMODB_TABLE_NAME || null;
-const databaseEnvironmentProvider = new DatabaseEnvironmentProvider(providedTableName, DI.logger);
+const tableName = process.env.DYNAMODB_TABLE_NAME;
+const entityTypeIndexName = process.env.DYNAMODB_ENTITY_TYPE_INDEX_NAME;
+const entityStatusIndexName = process.env.DYNAMODB_ENTITY_STATUS_INDEX_NAME;
+
+const databaseEnvironmentProvider = new DatabaseProvider(
+  { tableName, entityTypeIndexName, entityStatusIndexName },
+  DI.logger,
+);
 
 export const start = async () => {
   await init;
-  await databaseEnvironmentProvider.createEnvironment();
+  await databaseEnvironmentProvider.createTable();
 };
 
 export const stop = async () => {
-  await databaseEnvironmentProvider.destroyEnvironment();
+  await databaseEnvironmentProvider.destroyTable();
   DI.server.close();
 };
 

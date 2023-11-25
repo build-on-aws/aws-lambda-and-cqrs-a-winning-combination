@@ -1,4 +1,4 @@
-import { RentalStatus } from "../../src/model/Rental";
+import { RentalStatus } from "../../src/models/Rental";
 import { getAgent, getFakeBookId, getFakeUserId, getFakeUserWithId, start, stop } from "../helpers/common";
 
 describe("CRUD Controller: /rental", () => {

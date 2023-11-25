@@ -5,6 +5,7 @@ import { BaseRepository } from "./BaseRepository";
 import { Author, AuthorPrimaryKey, AuthorUpdateModel } from "../models/Author";
 import { PrimaryKey } from "../database/DatabaseEntities";
 import { ByTypeAndSortKey, ByTypeAndStatus, Index } from "../database/DatabaseProvider";
+import { MappingValidationError } from "../exceptions/MappingValidationError";
 
 export class AuthorRepository extends BaseRepository<Author, AuthorUpdateModel, AuthorPrimaryKey> {
   constructor(databaseProvider: IDatabaseProvider) {
@@ -13,6 +14,14 @@ export class AuthorRepository extends BaseRepository<Author, AuthorUpdateModel, 
 
   async create(model: Author): Promise<Author> {
     const id = KSUID.randomSync().string;
+
+    if (!model.name) {
+      throw new MappingValidationError("Author: 'name' field is required");
+    }
+
+    if (!model.birthdate) {
+      throw new MappingValidationError("Author: 'birthdate' field is required");
+    }
 
     await this.databaseProvider.put({
       ...this.getFormattedKey({ id }),
@@ -66,11 +75,7 @@ export class AuthorRepository extends BaseRepository<Author, AuthorUpdateModel, 
   }
 
   async queryByTypeAndSortKey(name: string, sortKey: string, pagination?: PaginationParameters): Promise<Author[]> {
-    const collection = await this.databaseProvider.query(
-      ByTypeAndSortKey(name, sortKey),
-      Index.TYPE,
-      pagination
-    );
+    const collection = await this.databaseProvider.query(ByTypeAndSortKey(name, sortKey), Index.TYPE, pagination);
 
     return collection.map((record) => {
       return {
@@ -82,11 +87,7 @@ export class AuthorRepository extends BaseRepository<Author, AuthorUpdateModel, 
   }
 
   async queryByTypeAndStatus(name: string, status: string, pagination?: PaginationParameters): Promise<Author[]> {
-    const collection = await this.databaseProvider.query(
-      ByTypeAndStatus(name, status),
-      Index.STATUS,
-      pagination
-    );
+    const collection = await this.databaseProvider.query(ByTypeAndStatus(name, status), Index.STATUS, pagination);
 
     return collection.map((record) => {
       return {

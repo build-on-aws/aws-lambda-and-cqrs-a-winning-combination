@@ -1,8 +1,8 @@
 import { DatabaseProvider } from "./database/DatabaseProvider";
 
-const tableName = process.env.DYNAMODB_TABLE_NAME || null;
-const entityTypeIndexName = process.env.DYNAMODB_ENTITY_TYPE_INDEX_NAME || null;
-const entityStatusIndexName = process.env.DYNAMODB_ENTITY_STATUS_INDEX_NAME || null;
+const tableName = process.env.DYNAMODB_TABLE_NAME;
+const entityTypeIndexName = process.env.DYNAMODB_ENTITY_TYPE_INDEX_NAME;
+const entityStatusIndexName = process.env.DYNAMODB_ENTITY_STATUS_INDEX_NAME;
 
 const command = process.argv[2] || "";
 

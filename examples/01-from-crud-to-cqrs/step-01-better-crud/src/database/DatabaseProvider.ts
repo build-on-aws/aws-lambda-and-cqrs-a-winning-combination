@@ -136,21 +136,21 @@ export class DatabaseProvider implements IDatabaseProvider {
       .map((pair) => pair.join(" = "))
       .join(", ");
 
-    const result = await this.client.update({
-      TableName: this.tableName,
-      Key: key,
-      UpdateExpression: `SET ${updateExpression}`,
-      ExpressionAttributeNames: names,
-      ExpressionAttributeValues: values,
-      ReturnValues: "ALL_NEW",
-      ConditionExpression: "attribute_exists(resourceId) AND attribute_exists(subResourceId)",
-    });
+    try {
+      const result = await this.client.update({
+        TableName: this.tableName,
+        Key: key,
+        UpdateExpression: `SET ${updateExpression}`,
+        ExpressionAttributeNames: names,
+        ExpressionAttributeValues: values,
+        ReturnValues: "ALL_NEW",
+        ConditionExpression: "attribute_exists(resourceId) AND attribute_exists(subResourceId)",
+      });
 
-    if (!result.Attributes) {
+      return result.Attributes ?? {};
+    } catch (error: any) {
       throw new NotFoundError(`Entity with primary key '${key.resourceId}, ${key.subResourceId}' not found`);
     }
-
-    return result.Attributes;
   }
 
   async delete(key: PrimaryKey) {

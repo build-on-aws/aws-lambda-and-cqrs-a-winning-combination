@@ -1,10 +1,10 @@
+import KSUID from "ksuid";
 import Router from "express-promise-router";
 import { Request, Response } from "express";
 import { extractPaginationDetails } from "../common/controllers";
-import { NotFoundError } from "../exceptions/NotFoundError";
+import { UserRequestPayload, UserStatus, UserUpdateModel } from "../models/User";
+import { UserRepository } from "../repositories";
 import { DI } from "../server";
-import { User, UserModel } from "../model/User";
-import { ByType, Index } from "../database/DatabaseActionsProvider";
 
 const router = Router();
 
@@ -12,11 +12,18 @@ const router = Router();
 
 router.post("/", async (req: Request, res: Response) => {
   const payload = req.body;
-  const mapper = User.fromPayloadForCreate(payload);
+  const request = payload as UserRequestPayload;
 
-  const result = await DI.database.actions.put(mapper.toModel());
+  const repository = DI.repositoriesFactory.createRepositoryFor("User") as UserRepository;
+  const result = await repository.create({
+    id: KSUID.randomSync().string,
+    name: request.name,
+    email: request.email,
+    status: UserStatus.NOT_VERIFIED,
+    comment: "",
+  });
 
-  res.json(User.fromModel(result as UserModel).toMapping());
+  res.json(result);
 });
 
 // Read (All).
@@ -24,24 +31,21 @@ router.post("/", async (req: Request, res: Response) => {
 router.get("/", async (req: Request, res: Response) => {
   const pagination = extractPaginationDetails(req);
 
-  const collection = await DI.database.actions.query(ByType("User"), Index.TYPE, pagination);
+  const repository = DI.repositoriesFactory.createRepositoryFor("User") as UserRepository;
+  const collection = await repository.queryByTypeAndSortKey("User", "", pagination);
 
-  res.json(collection.map((entity) => User.fromModel(entity as UserModel).toMapping()));
+  res.json(collection);
 });
 
 // Read (One).
 
 router.get("/:id", async (req: Request<{ id: string }>, res: Response) => {
   const id = req.params.id;
-  const mapper = User.fromId(id);
 
-  const result = await DI.database.actions.get(mapper.toKey());
+  const repository = DI.repositoriesFactory.createRepositoryFor("User") as UserRepository;
+  const result = await repository.read({ id });
 
-  if (!result) {
-    throw new NotFoundError("User");
-  }
-
-  res.json(User.fromModel(result as UserModel).toMapping());
+  res.json(result);
 });
 
 // Update.
@@ -49,30 +53,23 @@ router.get("/:id", async (req: Request<{ id: string }>, res: Response) => {
 router.put("/:id", async (req: Request<{ id: string }>, res: Response) => {
   const id = req.params.id;
   const payload = req.body;
-  const mapper = User.fromPayloadForUpdate(id, payload);
+  const request = payload as UserUpdateModel;
 
-  const result = await DI.database.actions.update(mapper.toKey(), mapper.toUpdate());
+  const repository = DI.repositoriesFactory.createRepositoryFor("User") as UserRepository;
+  const result = await repository.update({ id }, request);
 
-  if (!result) {
-    throw new NotFoundError("User");
-  }
-
-  res.json(User.fromModel(result as UserModel).toMapping());
+  res.json(result);
 });
 
 // Delete.
 
 router.delete("/:id", async (req: Request<{ id: string }>, res: Response) => {
   const id = req.params.id;
-  const mapper = User.fromId(id);
 
-  const result = await DI.database.actions.delete(mapper.toKey());
+  const repository = DI.repositoriesFactory.createRepositoryFor("User") as UserRepository;
+  const result = await repository.delete({ id });
 
-  if (!result) {
-    throw new NotFoundError("User");
-  }
-
-  res.json(mapper.emptyMapping());
+  res.json(result);
 });
 
 export const UserController = router;
