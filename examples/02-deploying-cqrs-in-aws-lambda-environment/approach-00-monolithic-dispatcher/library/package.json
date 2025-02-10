@@ -28,7 +28,7 @@
     "@aws-sdk/client-dynamodb": "~3.451.0",
     "@aws-sdk/lib-dynamodb": "~3.451.0",
     "@middy/core": "~4.7.0",
-    "esbuild": "~0.14.14",
+    "esbuild": "~0.25.0",
     "ksuid": "~3.0.0",
     "moment": "~2.29.4"
   },
